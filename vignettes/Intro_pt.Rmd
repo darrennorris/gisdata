@@ -21,6 +21,123 @@ library(gisdata)
 # Introduction
 ***
 Aqui em menos de 100 linhas de codigo vamos:
-1) carregar dados 2) olhar mapas (SIG), 3) gerar tabelas com resumos 
-4) visulizar resutados em graficos e 5) rodar anlises estatisticas.
-Para rodar todo isso precisamos os seguintes pacotes, que deve esta intallado antes: plyr, tidyverse, sf, mapview, sjPlot, sjmisc, sjlabelled, interactions.
+1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
+4) visulizar resutados em graficos; e 5) rodar anlises estatisticas.
+
+Para rodar todo isso precisamos os seguintes pacotes, que deve esta instalado antes: plyr, tidyverse, raster, sf, mapview, sjPlot, sjmisc, sjlabelled, interactions.
+Por isso, deve Instalar pacotes necessarios antes de começar:
+
+```{r echo=TRUE, eval=FALSE}
+install.packages(c("plyr","tidyverse", "raster","sf", "mapview", 
+                   "sjPlot", "sjmisc", "sjlabelled", "interactions"))
+```
+
+Carregar pacotes: 
+```{r eval=TRUE, message=FALSE}
+library(plyr)
+library(tidyverse)
+library(sf)
+library(mapview)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(interactions)
+```                  
+
+Agora podemos fazer um grafico com funçao "ggplot" (pacote ggplot2), que faz parte de "tidyverse".
+Grafico Usando os dados "mtcars" que ja esta presente no pacote ggplot2:
+```{r echo=TRUE, message = FALSE}
+ggplot2::ggplot(mtcars, aes(x = wt, y =  mpg)) + geom_point()
+```
+
+Para entender melhor buscar ajudar:
+```{r echo=TRUE, eval=FALSE}
+?mtcars
+?geom_point
+```
+
+## 1) Carregar arquivos com dados de SIG.
+Baixar arquivo com dados. Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPK:](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) 
+Lembrando de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
+
+Agora avisar R sobre onde ficar o arquivo. O codigo abaixo vai abrir uma nova janela, e vc deve buscar e selecionar o arquivo "rivers.GPKG": 
+```{r echo=TRUE, eval=FALSE}
+meuSIG <- file.choose()
+```
+
+Agora vamos olhar o que tem nor arquivo.
+```{r echo = TRUE, eval = FALSE}
+sf::st_layers(meuSIG)
+```
+
+Existem camadas diferentes com pontos e linhas:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+sf::st_layers(system.file("vector/rivers.GPKG", package="gisdata"))
+```
+
+### 1.1) Carregar pontos e linhas em trechos de 5km ao longo os rios
+O codigo vai carregar os dados e criar 2 objetos "rsm" e "rsl.
+```{r echo = TRUE, eval = FALSE}
+rsm <- sf::st_read(meuSIG, layer = "midoints")
+rsl <- sf::st_read(meuSIG, layer = "centerline")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rsm <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints")
+rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "centerline")
+```
+
+## 2) Olhar mapas
+### 2.1) plot 276086 pontos - muitos pontos cerca de 5 minutos para concluir
+ggplot(fl) + geom_sf(data = fl, aes(color=zone))
+
+### 2.2) plot linha central e pontos de rios em trechos de 5km
+
+```{r fig.width=10, fig.height=5, fig.fullwidth=TRUE}
+ggplot(rsl) +
+  geom_sf(aes(color=rio)) +
+  geom_sf(data = rsm, shape=21, aes(fill=zone))
+```
+
+## 2.3) Interativo (funcione somente com internet), 
+Mostrando agora com fundo de mapas "base" (OpenStreetMap/ESRI etc) 
+```{r echo = TRUE, eval = FALSE}
+mapview(rsl, zcol = "rio") + mapview(rsm, zcol = "zone")
+```
+
+
+```{r fig.width=6, fig.height=6, echo=FALSE, message=FALSE, warning=FALSE}
+#mapview(rsl, zcol = "rio") + mapview(rsm, zcol = "zone")
+#code generates error in Error in if (!is.na(getProjection(lst[[i]]))) { : 
+#  argumento tem comprimento zero
+mapview(rsl, zcol = "rio") 
+
+```
+
+
+## 3) resumo de dados na tabela de atributos
+### 3.1) rio e por seis zonas
+ddply(data.frame(fl), .(rio, zone), summarise, 
+      fl_prop_500m = round(mean(dsmt500),3), 
+      fl_prop_1km = round(mean(X1KM_ds),3),
+      fl_prop_5km = round(mean(X5km_ds),3),
+      fl_prop_10km = round(mean(X10km_d),3)
+      )
+
+### 3.2) rio, 6 zonas e, 52 subzonas
+dfsubzona <- ddply(data.frame(fl), .(rio, zone, subz_id), summarise, 
+      afl_prop_500m = round(mean(dsmt500),3), 
+      bfl_prop_1km = round(mean(X1KM_ds),3),
+      cfl_prop_5km = round(mean(X5km_ds),3),
+      dfl_prop_10km = round(mean(X10km_d),3)
+)
+dfsubzona$zone <- relevel(dfsubzona$zone, ref="barragem-Amapari")
+#visualizar tabela
+tab_df(dfsubzona)
+#Exportar tabela com resumos em formato para word
+tab_df(dfsubzona, file = "subzona.html")
+#Exportar tabela com resumos em formato para excel
+write.csv2(dfsubzona, file = "subzona.csv")
+
+
