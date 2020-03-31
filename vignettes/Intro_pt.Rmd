@@ -1,5 +1,7 @@
 ---
 title: "Intro_pt"
+author: "Dr. Darren Norris (<dnorris75@gmail.com>)"
+date: "31 de Março de 2020"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Intro_pt}
@@ -14,18 +16,20 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(gisdata)
-```
 
 # Introduction
 ***
 Aqui em menos de 100 linhas de codigo vamos:
 1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
-4) visulizar resutados em graficos; e 5) rodar anlises estatisticas.
+4) visulizar resultados em graficos; e 5) rodar anlises estatisticas.
+
+Objetivo nao é de apresentar detalhes sobre os funcoes/metodos estatisticas ou de R.
+Mas, sim, o objetivo é  de apresentar um exemplo mostrado os capacidades / opçoes  de desenvolver e integrar pesquisas cientificas que sao disponibilizados no ambiente estatistica de R.
+
+Aqui vamos pesquisar desmatamento entre 2000 - 2018 ao longo de 
 
 Para rodar todo isso precisamos os seguintes pacotes, que deve esta instalado antes: plyr, tidyverse, raster, sf, mapview, sjPlot, sjmisc, sjlabelled, interactions.
-Por isso, deve Instalar pacotes necessarios antes de começar:
+Por isso, deve Instalar os pacotes necessarios antes de começar:
 
 ```{r echo=TRUE, eval=FALSE}
 install.packages(c("plyr","tidyverse", "raster","sf", "mapview", 
@@ -33,7 +37,7 @@ install.packages(c("plyr","tidyverse", "raster","sf", "mapview",
 ```
 
 Carregar pacotes: 
-```{r eval=TRUE, message=FALSE}
+```{r, setup, eval=TRUE, message=FALSE}
 library(plyr)
 library(tidyverse)
 library(sf)
@@ -57,7 +61,7 @@ Para entender melhor buscar ajudar:
 ```
 
 ## 1) Carregar arquivos com dados de SIG.
-Baixar arquivo com dados. Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPK:](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) 
+Baixar arquivo com os dados. Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) 
 Lembrando de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
 
 Agora avisar R sobre onde ficar o arquivo. O codigo abaixo vai abrir uma nova janela, e vc deve buscar e selecionar o arquivo "rivers.GPKG": 
@@ -76,31 +80,40 @@ Existem camadas diferentes com pontos e linhas:
 sf::st_layers(system.file("vector/rivers.GPKG", package="gisdata"))
 ```
 
-### 1.1) Carregar pontos e linhas em trechos de 5km ao longo os rios
-O codigo vai carregar os dados e criar 2 objetos "rsm" e "rsl.
+### 1.1) Carregar dados (vectores)
+O codigo vai carregar os dados e criar 3 objetos "rsm", "rsl" e "fl".
+Agora temos dados com: pontos cada 5 km ao longo os rios (rsm) ; 
+linha central de rios ("rsl") e pontos cada metro ao longos os rios ("fl").
 ```{r echo = TRUE, eval = FALSE}
 rsm <- sf::st_read(meuSIG, layer = "midoints")
 rsl <- sf::st_read(meuSIG, layer = "centerline")
+fl <- sf::st_read(meuSIG, layer = "forestloss")
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-rsm <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints")
-rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "centerline")
+rsm <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints", quiet=TRUE)
+rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "centerline", quiet=TRUE)
+fl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "forestloss", quiet=TRUE)
 ```
 
 ## 2) Olhar mapas
-### 2.1) plot 276086 pontos - muitos pontos cerca de 5 minutos para concluir
-ggplot(fl) + geom_sf(data = fl, aes(color=zone))
+### 2.1) Mapa com pontos cada metro de rio
+Plot 276086 pontos - muitos pontos cerca de 5 minutos para concluir....
 
-### 2.2) plot linha central e pontos de rios em trechos de 5km
+```{r echo=TRUE, eval=FALSE}
+ggplot2::ggplot(fl) + geom_sf(data = fl, aes(color=zone))
+```
 
-```{r fig.width=10, fig.height=5, fig.fullwidth=TRUE}
+
+### 2.2) Mapa com linha central e pontos de rios em trechos de 5km
+
+```{r fig.width=9, fig.height=5}
 ggplot(rsl) +
   geom_sf(aes(color=rio)) +
   geom_sf(data = rsm, shape=21, aes(fill=zone))
 ```
 
-## 2.3) Interativo (funcione somente com internet), 
+## 2.3) Interativo (funcione somente com internet) 
 Mostrando agora com fundo de mapas "base" (OpenStreetMap/ESRI etc) 
 ```{r echo = TRUE, eval = FALSE}
 mapview(rsl, zcol = "rio") + mapview(rsm, zcol = "zone")
@@ -117,27 +130,118 @@ mapview(rsl, zcol = "rio")
 
 
 ## 3) resumo de dados na tabela de atributos
-### 3.1) rio e por seis zonas
-ddply(data.frame(fl), .(rio, zone), summarise, 
-      fl_prop_500m = round(mean(dsmt500),3), 
-      fl_prop_1km = round(mean(X1KM_ds),3),
-      fl_prop_5km = round(mean(X5km_ds),3),
-      fl_prop_10km = round(mean(X10km_d),3)
+### 3.1) Desmatamento por rio e por seis zonas
+Mostrando valores media de desmatamento (proporçao desmatado) em raois de 500 metros, 1 quilometro, 5 quilometros e 10 kilometros.
+```{r}
+plyr::ddply(data.frame(fl), .(rio, zone), summarise, 
+      fl_500m = round(mean(dsmt500),3), 
+      fl_1km = round(mean(X1KM_ds),3),
+      fl_5km = round(mean(X5km_ds),3),
+      fl_10km = round(mean(X10km_d),3)
       )
+```
+
 
 ### 3.2) rio, 6 zonas e, 52 subzonas
-dfsubzona <- ddply(data.frame(fl), .(rio, zone, subz_id), summarise, 
+
+```{r}
+dfsubzona <- plyr::ddply(data.frame(fl), .(rio, zone, subz_id), summarise, 
       afl_prop_500m = round(mean(dsmt500),3), 
       bfl_prop_1km = round(mean(X1KM_ds),3),
       cfl_prop_5km = round(mean(X5km_ds),3),
       dfl_prop_10km = round(mean(X10km_d),3)
 )
 dfsubzona$zone <- relevel(dfsubzona$zone, ref="barragem-Amapari")
-#visualizar tabela
-tab_df(dfsubzona)
-#Exportar tabela com resumos em formato para word
+```
+
+
+Visualizar tabela, aproveitando funções disponíveis no pacote "sjPlot":
+```{r}
+sjPlot::tab_df(dfsubzona)
+```
+
+Exportar tabela com resumos ("dfsubzona") em formato para word:
+```{r echo = TRUE, eval = FALSE}
 tab_df(dfsubzona, file = "subzona.html")
-#Exportar tabela com resumos em formato para excel
-write.csv2(dfsubzona, file = "subzona.csv")
+```
+
+Exportar tabela com resumos ("dfsubzona") em formato para excel
+```{r echo = TRUE, eval = FALSE}
+write.csv2(dfsubzona, file = "subzona.csv", row.names=FALSE)
+```
+
+## 4) Graficos 
+### 4.1) mostrando as diferencas em dematamento entre zonas
+
+```{r fig.width=5, fig.height=3}
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_prop_500m)) + 
+  geom_boxplot()
+```
+
+Agora, atraves de ajustes no codigo, vamos tentar de fazer mais bonita.....
+```{r fig.width=5, fig.height=3}
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_prop_500m)) + 
+  geom_boxplot(aes(color=rio)) +
+  ylab("Proporção desmatado (raio 500 metros)") + xlab("Zona") + 
+  coord_flip() + 
+   theme_bw() + theme(legend.position=c(0.8, 0.8))
+```
+
+
+## 4.2) Grafico comparando desmatamento entre raios de 500m, 1km, 5km e 10km
+Preciso ajustar os dados para facilitar apresentaçao visual:
+```{r echo=TRUE, message = FALSE}
+baplot <- pivot_longer(dfsubzona, cols = c("afl_prop_500m", "bfl_prop_1km", 
+                                           "cfl_prop_5km", "dfl_prop_10km"), 
+                       names_to = "variable", values_to = "desmat")
+baplot$variablef <- as.factor(baplot$variable)
+levels(baplot$variablef) <- c("500 m", "1 km", "5 km", "10 km")
+```
+
+Agora o grafico:
+```{r fig.width=8, fig.height=5}
+ggplot2::ggplot(baplot, aes(x = zone, y = desmat)) + 
+  geom_boxplot(aes(color=rio)) +
+  ylab("Proporção desmatado (2000 - 2018)") + xlab("Zona") +
+  coord_flip() + 
+  theme_bw() +  
+  facet_wrap(~variablef)
+```
+
+## 5) Analises estatistica, comparando desmatamento entre zonas e raios
+Modelo adequado para dados de proporção (valores de 0-1):
+```{r}
+glm1 <- glm(desmat ~ variablef + zone, family = quasibinomial ,data = baplot)
+```
+
+Agora tres formas diferentes de apresentar resumo do modelo:
+Primeiramente com base R:
+```{r}
+summary(glm1)
+```
+
+E com funções disponíveis no pacote "sjPlot":
+
+```{r}
+sjPlot::tab_model(glm1)
+
+```
+
+Grafico de valores do modelo, no estilo "Forest-plot"
+```{r fig.width=6, fig.height=4}
+sjPlot::plot_model(glm1, show.values = TRUE, value.offset = .3)
+```
+
+E com funçao no pacote "interactions":
+```{r message=FALSE, fig.width=6, fig.height=4, warning=FALSE}
+interactions::cat_plot(glm1, pred = variablef, modx = zone, x.label = "Raio",
+         y.label = "Proporção desmatado (2000 - 2018)")
+```
+
+
+## 6) Finalizar. Salvar uma copiar de dados para uso futuro
+```{r echo=TRUE, eval=FALSE}
+save.image("intro.RData")
+```
 
 
