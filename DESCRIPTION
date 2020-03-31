@@ -21,7 +21,7 @@ Imports: plyr,
     sf,
     sjPlot,
     sjmisc,
-    sjlabelled
+    sjlabelled,
     stats,
     units,
     viridis

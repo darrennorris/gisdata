@@ -7,13 +7,13 @@
 myx(x)
 }
 \arguments{
-\item{x}{}
+\item{x}{A number.}
 }
 \value{
 value of x + 1
 }
 \description{
-Myx
+Adds 1 to x. Just to have a function.
 }
 \examples{
 \dontrun{
