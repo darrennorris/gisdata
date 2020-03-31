@@ -1,0 +1,26 @@
+---
+title: "Intro_pt"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Intro_pt}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(gisdata)
+```
+
+# Introduction
+***
+Aqui em menos de 100 linhas de codigo vamos:
+1) carregar dados 2) olhar mapas (SIG), 3) gerar tabelas com resumos 
+4) visulizar resutados em graficos e 5) rodar anlises estatisticas.
+Para rodar todo isso precisamos os seguintes pacotes, que deve esta intallado antes: plyr, tidyverse, sf, mapview, sjPlot, sjmisc, sjlabelled, interactions.
