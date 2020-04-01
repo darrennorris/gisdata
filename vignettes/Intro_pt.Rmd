@@ -16,13 +16,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 # Apresentação
-***
+*****
 Aqui vamos pesquisar desmatamento entre 2000 - 2018 ao longo de 276 quilômetros de rios na Amazônia Brasileira. As pesquisas fazem parte de atividades desenvolvidos no projeto [Where is my Turtle](https://myturtlebrazil.wixsite.com/whereismyturtle) : https://myturtlebrazil.wixsite.com/whereismyturtle .
 
-Objetivo não é de apresentar detalhes sobre os cálculos/funções/métodos estatísticas ou de [R](https://cran.r-project.org/).
-Mas, sim, o objetivo é  de apresentar um exemplo mostrado os capacidades e opções  de desenvolver e integrar pesquisas cientificas que sao disponibilizados no ambiente estatística de [R](https://cran.r-project.org/)
+ * Objetivo não é de apresentar detalhes sobre os cálculos/métodos estatísticas ou os funções no [R](https://cran.r-project.org/).
+
+ * Mas, sim, o objetivo é  de apresentar um exemplo mostrado os capacidades e opções para desenvolver e integrar pesquisas cientificas no ambiente estatística de [R](https://cran.r-project.org/)
 
 Com menos de 100 linhas de código vamos:
 1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
@@ -53,7 +53,7 @@ library(interactions)
 Agora podemos fazer um gráfico com função "ggplot" (pacote [ggplot2](https://ggplot2.tidyverse.org/)), que faz parte do "tidyverse". Mais exemplos no [R cookbook](http://www.cookbook-r.com/Graphs/) : http://www.cookbook-r.com/Graphs/ .
 
 Primeiro gráfico com os dados "mtcars" no pacote ggplot2:
-```{r echo=TRUE, message = FALSE}
+```{r echo=TRUE, message = FALSE, fig.width=2, fig.height=2}
 ggplot2::ggplot(mtcars, aes(x = wt, y =  mpg)) + geom_point()
 ```
 
@@ -65,13 +65,17 @@ Para entender melhor pode verificar ajudar no R:
 
 Mais exemplos com [Scatterplots](http://www.cookbook-r.com/Graphs/Scatterplots_(ggplot2)/) aqui:  http://www.cookbook-r.com/Graphs/Scatterplots_(ggplot2)/
 
+<P style="page-break-before: always">
+
 ## 1) Carregar arquivos com dados de SIG.
 ```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
 fs <- file.size(system.file("vector/rivers.GPKG", package="gisdata"))/(1024^2)
 ```
 
 
-Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
+Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). 
+
+Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
 Lembrando-se de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
 
 Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "rivers.GPKG": 
@@ -106,7 +110,8 @@ rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer =
 fl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "forestloss", quiet=TRUE)
 ```
 
-## 2) Olhar mapas
+<P style="page-break-before: always">
+## 2) Mapas
 ### 2.1) Mapa com pontos cada metro de rio
 Objeto "fl" com 276086 pontos - muitos pontos cerca de 5 minutos para concluir....
 
@@ -117,11 +122,13 @@ ggplot2::ggplot(fl) + geom_sf(data = fl, aes(color=zone))
 
 ### 2.2) Mapa com linha central e pontos de rios em trechos de 5km
 
-```{r fig.width=9, fig.height=5}
+```{r fig.width=7, fig.height=4}
 ggplot(rsl) +
   geom_sf(aes(color=rio)) +
   geom_sf(data = rsm, shape=21, aes(fill=zone))
 ```
+
+<P style="page-break-before: always">
 
 ## 2.3) Interativo (funcione somente com internet) 
 Mostrando agora com fundo de mapas "base" (OpenStreetMap/ESRI etc) 
@@ -130,7 +137,7 @@ mapview(rsl, zcol = "rio") + mapview(rsm, zcol = "zone")
 ```
 
 
-```{r fig.width=6, fig.height=6, echo=FALSE, message=FALSE, warning=FALSE}
+```{r fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
 #mapview(rsl, zcol = "rio") + mapview(rsm, zcol = "zone")
 #code generates error in Error in if (!is.na(getProjection(lst[[i]]))) { : 
 #  argumento tem comprimento zero
@@ -144,9 +151,13 @@ Mais exemplos com mapas e dados espaciais no R:
 
 [Capitulo 8](https://geocompr.robinlovelace.net/adv-map.html) no livro [Geocomputation with R](https://geocompr.robinlovelace.net/) : https://geocompr.robinlovelace.net/adv-map.html
 
-## 3) resumo de dados na tabela de atributos
+**************
+<P style="page-break-before: always">
+
+
+## 3) Resumo de dados na tabela de atributos
 ### 3.1) Desmatamento por rio e por seis zonas
-Agora vamos fazer alguns resumos com os dados na tabela de atributos. No arquivo "fl" temos dados mostrando valores de [desmatamento](http://earthenginepartners.appspot.com/science-2013-global-forest) , obtidos de https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.6.html .
+Agora vamos fazer alguns resumos com os dados na tabela de atributos. No arquivo "fl" temos dados mostrando valores de [desmatamento](http://earthenginepartners.appspot.com/science-2013-global-forest) , "Global Forest Change" desenvolvido por Hansen e co-autores 2013 (https://science.sciencemag.org/content/342/6160/850) e obtidos de no site   https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.6.html .
 
 Os valores calculados são uma proporção de área desmatado nos anos 2000-2018 em raios de 500 metros, 1 quilometro, 5 quilômetros e 10 quilômetros. Os dados em pontos cada metro ao longo de 276 quilômetros de rios (276086 pontos) . Vamos calcular comprimento de rio e valor media de desmatamento em seis zonas diferentes:
 
@@ -190,8 +201,10 @@ Exportar tabela com resumos ("dfsubzona") em formato para excel:
 write.csv2(dfsubzona, file = "subzona.csv", row.names=FALSE)
 ```
 
+<P style="page-break-before: always">
+
 ## 4) Gráficos 
-### 4.1) mostrando as diferencas em dematamento entre zonas
+### 4.1) mostrando as diferenças em dematamento entre zonas
 
 ```{r fig.width=5, fig.height=3}
 ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) + 
@@ -207,9 +220,10 @@ ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) +
    theme_bw() + theme(legend.position=c(0.8, 0.8))
 ```
 
+<P style="page-break-before: always">
 
 ## 4.2) Gráfico comparando desmatamento entre raios de 500m, 1km, 5km e 10km
-Primeiro preciso ajustar os dados para facilitar apresentação visual:
+Primeiro preciso reorganizar os dados para facilitar apresentação visual:
 ```{r echo=TRUE, message = FALSE}
 baplot <- pivot_longer(dfsubzona, cols = c("afl_500m", "bfl_1km", 
                                            "cfl_5km", "dfl_10km"), 
@@ -228,11 +242,13 @@ ggplot2::ggplot(baplot, aes(x = zone, y = desmat)) +
   facet_wrap(~variablef)
 ```
 
+<P style="page-break-before: always">
+
 ## 5) Analises estatistica, comparando desmatamento entre zonas e raios
 Veja guias mostrando analises estatisticas no R para entender melhor: 
 [Capítulo 12](https://cdr.ibpad.com.br/modelos.html) no livro “Ciência de Dados com R–Introdução......”: https://cdr.ibpad.com.br/modelos.html 
 
-Modelo adequado para dados de proporção (valores de 0-1):
+Modelo adequado para dados de proporção (valores de 0-1). Aqui um modelo comparando efeito de raio (500 m, 1 km, 5 km, 10 km) e zona sobre proporção de desmatamento:
 ```{r}
 glm1 <- glm(desmat ~ variablef + zone, family = quasibinomial ,data = baplot)
 ```
@@ -261,13 +277,15 @@ interactions::cat_plot(glm1, pred = variablef, modx = zone, x.label = "Raio",
          y.label = "Proporção desmatado (2000 - 2018)")
 ```
 
+<P style="page-break-before: always">
 
-## 6) Finalizar. Salvar uma copiar de dados para uso futuro
+## 6) Finalizar. 
+Salvar uma copiar de dados para uso futuro.
 ```{r echo=TRUE, eval=FALSE}
 save.image("intro.RData")
 ```
 
-## Leitura
+## 7) Leitura
 Para quem buscar mais detalhes sobre os funções/métodos estatísticas no [R](https://cran.r-project.org/):
 
 Livro [Processamento e Análise de Dados](https://www.msperlin.com/padfeR/index.html) : https://www.msperlin.com/padfeR/index.html 
@@ -278,23 +296,21 @@ Além disso, existem fontes variadas de ajudar online:
 
 [cursos](https://pt.coursera.org/learn/r-programming) : https://pt.coursera.org/learn/r-programming; 
 
-[R-br: a lista Brasileira oficial de discussão do programa R:](http://r-br.2285057.n4.nabble.com/)  http://r-br.2285057.n4.nabble.com/,
-
-[foruns](https://www.facebook.com/rcomputing/) : https://www.facebook.com/rcomputing/ ;
+[R-br](http://r-br.2285057.n4.nabble.com/) a lista Brasileira oficial de discussão do programa R:  http://r-br.2285057.n4.nabble.com/,
 
 Capítulos 1 a 3 no livro “Processamento e Análise de Dados.....”: https://www.msperlin.com/padfeR/index.html 
 
 Capítulos 1 a 2 no livro “Ciência de Dados com R–Introdução......”: https://cdr.ibpad.com.br/cdr-intro.pdf 
 
+
 Ingles
+
 Instruções de instalação: https://moderndive.netlify.com/1-getting-started.html
 
 Com 3 aulas básicas: https://rladiessydney.org/courses/ryouwithme/01-basicbasics-0/
 
-Ajudar online
-R-br: a lista Brasileira oficial de discussão do programa R: http://r-br.2285057.n4.nabble.com/
+Foruns: [rcomputing](https://www.facebook.com/rcomputing/) : https://www.facebook.com/rcomputing/ ;
 
-Ingles
 https://www.r-bloggers.com/ exemplo com PCA:
 
 https://www.r-bloggers.com/computing-and-visualizing-pca-in-r/ 
