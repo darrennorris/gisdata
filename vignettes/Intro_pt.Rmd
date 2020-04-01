@@ -17,19 +17,21 @@ knitr::opts_chunk$set(
 ```
 
 
-# Introduction
+# Apresentação
 ***
-Aqui em menos de 100 linhas de codigo vamos:
+Aqui vamos pesquisar desmatamento entre 2000 - 2018 ao longo de 276 quilômetros de rios na Amazônia Brasileira. As pesquisas fazem parte de atividades desenvolvidos no projeto [Where is my Turtle](https://myturtlebrazil.wixsite.com/whereismyturtle) : https://myturtlebrazil.wixsite.com/whereismyturtle .
+
+Objetivo não é de apresentar detalhes sobre os cálculos/funções/métodos estatísticas ou de [R](https://cran.r-project.org/).
+Mas, sim, o objetivo é  de apresentar um exemplo mostrado os capacidades e opções  de desenvolver e integrar pesquisas cientificas que sao disponibilizados no ambiente estatística de [R](https://cran.r-project.org/)
+
+Com menos de 100 linhas de código vamos:
 1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
-4) visulizar resultados em graficos; e 5) rodar anlises estatisticas.
+4) visulizar resultados em gráficos; e 5) rodar anlises estatisticas.
 
-Objetivo nao é de apresentar detalhes sobre os funcoes/metodos estatisticas ou de R.
-Mas, sim, o objetivo é  de apresentar um exemplo mostrado os capacidades / opçoes  de desenvolver e integrar pesquisas cientificas que sao disponibilizados no ambiente estatistica de R.
+## Pacotes
+Para fazer todo isso em menos de 100 linhas, precisamos os seguintes pacotes, que deve esta instalado antes: [plyr](http://had.co.nz/plyr/), [tidyverse](https://www.tidyverse.org/), [sf](https://r-spatial.github.io/sf/), [mapview](https://r-spatial.github.io/mapview/), [sjPlot](https://strengejacke.github.io/sjPlot/), [sjmisc](https://strengejacke.github.io/sjmisc/articles/exploringdatasets.html), [sjlabelled](https://strengejacke.github.io/sjlabelled/articles/labelleddata.html), [interactions](https://interactions.jacob-long.com/).
 
-Aqui vamos pesquisar desmatamento entre 2000 - 2018 ao longo de 
-
-Para rodar todo isso precisamos os seguintes pacotes, que deve esta instalado antes: plyr, tidyverse, raster, sf, mapview, sjPlot, sjmisc, sjlabelled, interactions.
-Por isso, deve Instalar os pacotes necessarios antes de começar:
+Portanto, deve Instalar os pacotes necessários antes de começar:
 
 ```{r echo=TRUE, eval=FALSE}
 install.packages(c("plyr","tidyverse", "raster","sf", "mapview", 
@@ -48,28 +50,36 @@ library(sjlabelled)
 library(interactions)
 ```                  
 
-Agora podemos fazer um grafico com funçao "ggplot" (pacote ggplot2), que faz parte de "tidyverse".
-Grafico Usando os dados "mtcars" que ja esta presente no pacote ggplot2:
+Agora podemos fazer um gráfico com função "ggplot" (pacote [ggplot2](https://ggplot2.tidyverse.org/)), que faz parte do "tidyverse". Mais exemplos no [R cookbook](http://www.cookbook-r.com/Graphs/) : http://www.cookbook-r.com/Graphs/ .
+
+Primeiro gráfico com os dados "mtcars" no pacote ggplot2:
 ```{r echo=TRUE, message = FALSE}
 ggplot2::ggplot(mtcars, aes(x = wt, y =  mpg)) + geom_point()
 ```
 
-Para entender melhor buscar ajudar:
+Para entender melhor pode verificar ajudar no R:
 ```{r echo=TRUE, eval=FALSE}
 ?mtcars
 ?geom_point
 ```
 
-## 1) Carregar arquivos com dados de SIG.
-Baixar arquivo com os dados. Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) 
-Lembrando de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
+Mais exemplos com [Scatterplots](http://www.cookbook-r.com/Graphs/Scatterplots_(ggplot2)/) aqui:  http://www.cookbook-r.com/Graphs/Scatterplots_(ggplot2)/
 
-Agora avisar R sobre onde ficar o arquivo. O codigo abaixo vai abrir uma nova janela, e vc deve buscar e selecionar o arquivo "rivers.GPKG": 
+## 1) Carregar arquivos com dados de SIG.
+```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+fs <- file.size(system.file("vector/rivers.GPKG", package="gisdata"))/(1024^2)
+```
+
+
+Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
+Lembrando-se de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
+
+Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "rivers.GPKG": 
 ```{r echo=TRUE, eval=FALSE}
 meuSIG <- file.choose()
 ```
 
-Agora vamos olhar o que tem nor arquivo.
+Agora vamos olhar o que tem no arquivo.
 ```{r echo = TRUE, eval = FALSE}
 sf::st_layers(meuSIG)
 ```
@@ -81,7 +91,7 @@ sf::st_layers(system.file("vector/rivers.GPKG", package="gisdata"))
 ```
 
 ### 1.1) Carregar dados (vectores)
-O codigo vai carregar os dados e criar 3 objetos "rsm", "rsl" e "fl".
+O código abaixo vai carregar os dados e criar 3 objetos "rsm", "rsl" e "fl".
 Agora temos dados com: pontos cada 5 km ao longo os rios (rsm) ; 
 linha central de rios ("rsl") e pontos cada metro ao longos os rios ("fl").
 ```{r echo = TRUE, eval = FALSE}
@@ -98,7 +108,7 @@ fl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = 
 
 ## 2) Olhar mapas
 ### 2.1) Mapa com pontos cada metro de rio
-Plot 276086 pontos - muitos pontos cerca de 5 minutos para concluir....
+Objeto "fl" com 276086 pontos - muitos pontos cerca de 5 minutos para concluir....
 
 ```{r echo=TRUE, eval=FALSE}
 ggplot2::ggplot(fl) + geom_sf(data = fl, aes(color=zone))
@@ -128,12 +138,21 @@ mapview(rsl, zcol = "rio")
 
 ```
 
+Mais exemplos com mapas e dados espaciais no R:
+
+[sf e ggplot2](https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html) : https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html
+
+[Capitulo 8](https://geocompr.robinlovelace.net/adv-map.html) no livro [Geocomputation with R](https://geocompr.robinlovelace.net/) : https://geocompr.robinlovelace.net/adv-map.html
 
 ## 3) resumo de dados na tabela de atributos
 ### 3.1) Desmatamento por rio e por seis zonas
-Mostrando valores media de desmatamento (proporçao desmatado) em raois de 500 metros, 1 quilometro, 5 quilometros e 10 kilometros.
+Agora vamos fazer alguns resumos com os dados na tabela de atributos. No arquivo "fl" temos dados mostrando valores de [desmatamento](http://earthenginepartners.appspot.com/science-2013-global-forest) , obtidos de https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.6.html .
+
+Os valores calculados são uma proporção de área desmatado nos anos 2000-2018 em raios de 500 metros, 1 quilometro, 5 quilômetros e 10 quilômetros. Os dados em pontos cada metro ao longo de 276 quilômetros de rios (276086 pontos) . Vamos calcular comprimento de rio e valor media de desmatamento em seis zonas diferentes:
+
 ```{r}
 plyr::ddply(data.frame(fl), .(rio, zone), summarise, 
+        rio_km = round((length(dsmt500) / 1000),1),
       fl_500m = round(mean(dsmt500),3), 
       fl_1km = round(mean(X1KM_ds),3),
       fl_5km = round(mean(X5km_ds),3),
@@ -142,14 +161,15 @@ plyr::ddply(data.frame(fl), .(rio, zone), summarise,
 ```
 
 
-### 3.2) rio, 6 zonas e, 52 subzonas
+### 3.2) Desmatamento por rio e por 52 subzonas
+Agora, repetindo o mesmo processo, mas acrescentando resumos para 52 subzonas (cerca de 5 km cada) para um analise mais preciso.
 
 ```{r}
 dfsubzona <- plyr::ddply(data.frame(fl), .(rio, zone, subz_id), summarise, 
-      afl_prop_500m = round(mean(dsmt500),3), 
-      bfl_prop_1km = round(mean(X1KM_ds),3),
-      cfl_prop_5km = round(mean(X5km_ds),3),
-      dfl_prop_10km = round(mean(X10km_d),3)
+      afl_500m = round(mean(dsmt500),3), 
+      bfl_1km = round(mean(X1KM_ds),3),
+      cfl_5km = round(mean(X5km_ds),3),
+      dfl_10km = round(mean(X10km_d),3)
 )
 dfsubzona$zone <- relevel(dfsubzona$zone, ref="barragem-Amapari")
 ```
@@ -160,27 +180,27 @@ Visualizar tabela, aproveitando funções disponíveis no pacote "sjPlot":
 sjPlot::tab_df(dfsubzona)
 ```
 
-Exportar tabela com resumos ("dfsubzona") em formato para word:
+Exportar tabela com resumos ("dfsubzona") em formato "html" para word:
 ```{r echo = TRUE, eval = FALSE}
 tab_df(dfsubzona, file = "subzona.html")
 ```
 
-Exportar tabela com resumos ("dfsubzona") em formato para excel
+Exportar tabela com resumos ("dfsubzona") em formato para excel:
 ```{r echo = TRUE, eval = FALSE}
 write.csv2(dfsubzona, file = "subzona.csv", row.names=FALSE)
 ```
 
-## 4) Graficos 
+## 4) Gráficos 
 ### 4.1) mostrando as diferencas em dematamento entre zonas
 
 ```{r fig.width=5, fig.height=3}
-ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_prop_500m)) + 
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) + 
   geom_boxplot()
 ```
 
-Agora, atraves de ajustes no codigo, vamos tentar de fazer mais bonita.....
+Agora, através de ajustes no código, vamos fazer um gráfico mais elegante e mais informativo.....
 ```{r fig.width=5, fig.height=3}
-ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_prop_500m)) + 
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) + 
   geom_boxplot(aes(color=rio)) +
   ylab("Proporção desmatado (raio 500 metros)") + xlab("Zona") + 
   coord_flip() + 
@@ -188,17 +208,17 @@ ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_prop_500m)) +
 ```
 
 
-## 4.2) Grafico comparando desmatamento entre raios de 500m, 1km, 5km e 10km
-Preciso ajustar os dados para facilitar apresentaçao visual:
+## 4.2) Gráfico comparando desmatamento entre raios de 500m, 1km, 5km e 10km
+Primeiro preciso ajustar os dados para facilitar apresentação visual:
 ```{r echo=TRUE, message = FALSE}
-baplot <- pivot_longer(dfsubzona, cols = c("afl_prop_500m", "bfl_prop_1km", 
-                                           "cfl_prop_5km", "dfl_prop_10km"), 
+baplot <- pivot_longer(dfsubzona, cols = c("afl_500m", "bfl_1km", 
+                                           "cfl_5km", "dfl_10km"), 
                        names_to = "variable", values_to = "desmat")
 baplot$variablef <- as.factor(baplot$variable)
 levels(baplot$variablef) <- c("500 m", "1 km", "5 km", "10 km")
 ```
 
-Agora o grafico:
+Agora o gráfico:
 ```{r fig.width=8, fig.height=5}
 ggplot2::ggplot(baplot, aes(x = zone, y = desmat)) + 
   geom_boxplot(aes(color=rio)) +
@@ -209,12 +229,15 @@ ggplot2::ggplot(baplot, aes(x = zone, y = desmat)) +
 ```
 
 ## 5) Analises estatistica, comparando desmatamento entre zonas e raios
+Veja guias mostrando analises estatisticas no R para entender melhor: 
+[Capítulo 12](https://cdr.ibpad.com.br/modelos.html) no livro “Ciência de Dados com R–Introdução......”: https://cdr.ibpad.com.br/modelos.html 
+
 Modelo adequado para dados de proporção (valores de 0-1):
 ```{r}
 glm1 <- glm(desmat ~ variablef + zone, family = quasibinomial ,data = baplot)
 ```
 
-Agora tres formas diferentes de apresentar resumo do modelo:
+Agora, mostrando três formas diferentes de apresentar resumo do modelo:
 Primeiramente com base R:
 ```{r}
 summary(glm1)
@@ -227,12 +250,12 @@ sjPlot::tab_model(glm1)
 
 ```
 
-Grafico de valores do modelo, no estilo "Forest-plot"
+Gráfico de valores do modelo, no estilo "Forest-plot"
 ```{r fig.width=6, fig.height=4}
 sjPlot::plot_model(glm1, show.values = TRUE, value.offset = .3)
 ```
 
-E com funçao no pacote "interactions":
+E com funçao "cat_plot" disponivel no pacote "interactions":
 ```{r message=FALSE, fig.width=6, fig.height=4, warning=FALSE}
 interactions::cat_plot(glm1, pred = variablef, modx = zone, x.label = "Raio",
          y.label = "Proporção desmatado (2000 - 2018)")
@@ -244,4 +267,35 @@ interactions::cat_plot(glm1, pred = variablef, modx = zone, x.label = "Raio",
 save.image("intro.RData")
 ```
 
+## Leitura
+Para quem buscar mais detalhes sobre os funções/métodos estatísticas no [R](https://cran.r-project.org/):
+
+Livro [Processamento e Análise de Dados](https://www.msperlin.com/padfeR/index.html) : https://www.msperlin.com/padfeR/index.html 
+
+Livro [Ciência de Dados com R](https://cdr.ibpad.com.br/) : https://cdr.ibpad.com.br/
+
+Além disso, existem fontes variadas de ajudar online:
+
+[cursos](https://pt.coursera.org/learn/r-programming) : https://pt.coursera.org/learn/r-programming; 
+
+[R-br: a lista Brasileira oficial de discussão do programa R:](http://r-br.2285057.n4.nabble.com/)  http://r-br.2285057.n4.nabble.com/,
+
+[foruns](https://www.facebook.com/rcomputing/) : https://www.facebook.com/rcomputing/ ;
+
+Capítulos 1 a 3 no livro “Processamento e Análise de Dados.....”: https://www.msperlin.com/padfeR/index.html 
+
+Capítulos 1 a 2 no livro “Ciência de Dados com R–Introdução......”: https://cdr.ibpad.com.br/cdr-intro.pdf 
+
+Ingles
+Instruções de instalação: https://moderndive.netlify.com/1-getting-started.html
+
+Com 3 aulas básicas: https://rladiessydney.org/courses/ryouwithme/01-basicbasics-0/
+
+Ajudar online
+R-br: a lista Brasileira oficial de discussão do programa R: http://r-br.2285057.n4.nabble.com/
+
+Ingles
+https://www.r-bloggers.com/ exemplo com PCA:
+
+https://www.r-bloggers.com/computing-and-visualizing-pca-in-r/ 
 

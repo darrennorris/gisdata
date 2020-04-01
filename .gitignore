@@ -28,3 +28,5 @@ vignettes/*.pdf
 .Renviron
 gisdata.Rproj
 inst/doc
+doc
+Meta
