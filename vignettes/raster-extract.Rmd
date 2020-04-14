@@ -1,0 +1,277 @@
+---
+title: "Obter valores de raster"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Obter valores de raster}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Apresentação
+*****
+Aqui vamos quantificar desmatamento entre 2000 - 2018 ao longo de 276 quilômetros de rios na Amazônia Brasileira. As pesquisas fazem parte de atividades desenvolvidos no projeto [Where is my Turtle](https://myturtlebrazil.wixsite.com/whereismyturtle) : https://myturtlebrazil.wixsite.com/whereismyturtle .
+
+ * O objetivo é  de apresentar um exemplo mostrado um método para a extracção de valores de células de Rasters no ambiente estatística de [R](https://cran.r-project.org/) .
+ 
+Vamos aproveitar dados mostrando valores de [desmatamento](http://earthenginepartners.appspot.com/science-2013-global-forest) , "Global Forest Change" desenvolvido por Hansen e co-autores 2013 (https://science.sciencemag.org/content/342/6160/850) e obtidos de no site   https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.6.html .
+
+Com menos de 100 linhas de código vamos:
+1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
+4) visulizar resultados em gráficos; e 5) rodar anlises estatisticas.
+
+## Pacotes
+Para fazer todo isso em menos de 100 linhas, precisamos os seguintes pacotes, que deve esta instalado antes: [plyr](http://had.co.nz/plyr/), [tidyverse](https://www.tidyverse.org/), [sf](https://r-spatial.github.io/sf/), [mapview](https://r-spatial.github.io/mapview/), [sjPlot](https://strengejacke.github.io/sjPlot/), [sjmisc](https://strengejacke.github.io/sjmisc/articles/exploringdatasets.html), [sjlabelled](https://strengejacke.github.io/sjlabelled/articles/labelleddata.html), [interactions](https://interactions.jacob-long.com/).
+
+Portanto, deve Instalar os pacotes necessários antes de começar:
+
+```{r echo=TRUE, eval=FALSE}
+install.packages(c("plyr","tidyverse", "raster","sf", "sp", "mapview", 
+                   "sjPlot", "sjmisc", "sjlabelled", "interactions"))
+```
+
+Carregar pacotes: 
+```{r, setup, eval=TRUE, message=FALSE}
+library(plyr)
+library(tidyverse)
+library(sf)
+library(sp)
+library(raster)
+library(mapview)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(interactions)
+```                  
+
+## 1) Carregar arquivos com dados de SIG.
+```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+fs <- file.size(system.file("vector/rivers.GPKG", package="gisdata"))/(1024^2)
+```
+
+### 1.1) Obter e carregar dados (vectores)
+Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). 
+
+Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
+Lembrando-se de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
+
+Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "rivers.GPKG": 
+```{r echo=TRUE, eval=FALSE}
+meuSIG <- file.choose()
+```
+
+Agora vamos olhar o que tem no arquivo.
+```{r echo = TRUE, eval = FALSE}
+sf::st_layers(meuSIG)
+```
+
+Existem camadas diferentes com pontos e linhas:
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+sf::st_layers(system.file("vector/rivers.GPKG", package="gisdata"))
+
+```
+
+O código abaixo vai carregar os dados e criar o objeto "rsm".
+Agora temos dados com: pontos cada 5 km ao longo os rios (rsm) e a 
+linha central de rios ("rsl").
+```{r echo = TRUE, eval = FALSE}
+rsm <- sf::st_read(meuSIG, layer = "midoints")
+rsl <- sf::st_read(meuSIG, layer = "centerline")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rsm <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints", quiet=TRUE)
+rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "centerline", quiet=TRUE)
+```
+
+<P style="page-break-before: always">
+
+### 1.2) Obter e carregar dados (raster)
+```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+fs2 <- file.size(system.file("raster/hansenmulti.tif", package="gisdata"))/(1024^2)
+```
+
+Baixar arquivo com os dados (formato ".tif", tamanho `r round(fs2,1)` MB). 
+
+Link: [https://github.com/darrennorris/gisdata/blob/master/inst/raster/hansenmulti.tif](https://github.com/darrennorris/gisdata/blob/master/inst/raster/hansenmulti.tif) .
+Lembrando-se de salvar o arquivo ("hansenmulti.tif")  em um local conhecido no seu computador.
+
+Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "hansenmulti.tif": 
+```{r echo=TRUE, eval=FALSE}
+meuSIGr <- file.choose()
+```
+
+O código abaixo vai carregar os dados e criar o objeto "hansen". Para isso trabalhamos com o pacote [raster](https://CRAN.R-project.org/package=raster). O pacote tem varios funçoes para a análise e modelagem de dados geográficos.
+
+```{r echo = TRUE, eval = FALSE}
+hansen <- raster::stack(meuSIGr)
+
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+hansen <- raster::stack(system.file("raster/hansenmulti.tif", package="gisdata"))
+
+```
+
+Pequena limpeza:
+
+```{r }
+newnames<- c( "Hansen_GFC.2018.v1.6_treecover2000_10N_060W", 
+ "Hansen_GFC.2018.v1.6_lossyear_10N_060W",     
+"Hansen_GFC.2018.v1.6_datamask_10N_060W",     
+ "treecover_reclass", "lossyear_reclass", "datamask_reclass") 
+names(hansen) <- newnames
+
+```
+
+E agora podemos olhar as camadas
+
+```{r fig.width=7, fig.height=5}
+plot(hansen)
+
+```
+
+
+E agora focando em uma camada mostrando anos onde houve perda de floresta (cores mostrando o ano). Acresentando tambem a linha central de rios e pontos cada 5 km (cores representando 52 subzonas, comprimento de cerca de 5 km cada).
+```{r fig.width=4.5, fig.height=4.5}
+ly <- subset(hansen,"Hansen_GFC.2018.v1.6_lossyear_10N_060W")
+plot(ly)
+plot(rsl, add=TRUE)
+plot(rsm, add=TRUE)
+
+```
+
+<P style="page-break-before: always">
+
+## 2) Extrair valores de Carregar arquivos com dados de SIG.
+
+Queremos saber ... Entao precisamos desenvolver uma função proprio por isso. 
+Existe uma funçao "extract" no pacote raster feito para isso. Mas,deveremos ajustar e informar informaçoes para nosso caso em especifico.......
+
+```{r}
+myextract <- function(x){
+sbp <- st_as_sf(x[ , c("geom")])
+sbp <- as(st_transform(sbp, crs(tc2000)),"Spatial")
+#500m
+c01_cell_500m <- raster::extract(tc2000, sbp, buffer = 500, 
+                               fun=function(x,...)length(x))
+c01_fc_500m <- raster::extract(tc2000, sbp, buffer = 500, fun=sum)
+c01_fl_500m <- raster::extract(lyrc, sbp, buffer = 500, fun=sum)
+prop01_500m <- if(!is.na(c01_fl_500m*c01_fc_500m) & c01_fc_500m>0 & c01_fl_500m<c01_fc_500m){
+  c01_fl_500m/c01_fc_500m}else{NA}
+#1km
+c02_cell_1km <- raster::extract(tc2000, sbp, buffer = 1000, 
+                                 fun=function(x,...)length(x))
+c02_fc_1km <- raster::extract(tc2000, sbp, buffer = 1000, fun=sum)
+c02_fl_1km <- raster::extract(lyrc, sbp, buffer = 1000, fun=sum)
+prop02_1km <- if(!is.na(c02_fl_1km*c02_fc_1km) & c02_fc_1km>0 & c02_fl_1km<c02_fc_1km){
+  c02_fl_1km/c02_fc_1km}else{NA}
+#5km
+c03_cell_5km <- raster::extract(tc2000, sbp, buffer = 5000, 
+                                 fun=function(x,...)length(x))
+c03_fc_5km <- raster::extract(tc2000, sbp, buffer = 5000, fun=sum)
+c03_fl_5km <- raster::extract(lyrc, sbp, buffer = 5000, fun=sum)
+prop03_5km <- if(!is.na(c03_fl_5km*c03_fc_5km) & c03_fc_5km>0 & c03_fl_5km<c03_fc_5km){
+  c03_fl_5km/c03_fc_5km}else{NA}
+#10km
+c04_cell_10km <- raster::extract(tc2000, sbp, buffer = 10000, 
+                                 fun=function(x,...)length(x))
+c04_fc_10km <- raster::extract(tc2000, sbp, buffer = 10000, fun=sum)
+c04_fl_10km <- raster::extract(lyrc, sbp, buffer = 10000, fun=sum)
+prop04_10km <- if(!is.na(c04_fl_10km*c04_fc_10km) & c04_fc_10km>0 & c04_fl_10km<c04_fc_10km){
+  c04_fl_10km/c04_fc_10km}else{NA}
+#40km
+c05_cell_40km <- raster::extract(tc2000, sbp, buffer = 40000, 
+                                 fun=function(x,...)length(x))
+c05_fc_40km <- raster::extract(tc2000, sbp, buffer = 40000, fun=sum)
+c05_fl_40km <- raster::extract(lyrc, sbp, buffer = 40000, fun=sum)
+prop05_40km <- if(!is.na(c05_fl_40km*c05_fc_40km) & c05_fc_40km>0 & c05_fl_40km<c05_fc_40km){
+  c05_fl_40km/c05_fc_40km}else{NA}
+#output dataframe with counts, and proportions
+dfout <- data.frame(C01_cell_500m=c01_cell_500m, C01_fc_500m=c01_fc_500m, C01_fl_500m=c01_fl_500m, 
+           C02_cell_1km=c02_cell_1km, C02_fc_1km=c02_fc_1km, C02_fl_1km=c02_fl_1km, 
+           C03_cell_5km=c03_cell_5km, C03_fc_5km=c03_fc_5km, C03_fl_5km=c03_fl_5km, 
+           C04_cell_10km=c04_cell_10km, C04_fc_10km=c04_fc_10km, C04_fl_10km=c04_fl_10km, 
+           C05_cell_40km=c05_cell_40km, C05_fc_40km=c05_fc_40km, C05_fl_40km=c05_fl_40km, 
+           Prop01_500m=round(prop01_500m,4), Prop02_1km=round(prop02_1km,4), 
+           Prop03_5km=round(prop03_5km,4), Prop04_10km=round(prop04_10km,4), 
+           Prop05_40km=round(prop05_40km,4)
+)
+}
+```
+
+E precisamos repetir isso para cada ponto. 
+Para isso passar para funcao "adply" no pacote plyr. 
+```{r}
+dfrsm <- data.frame(rsm)
+```
+
+E depois passar para funcao "adply" no pacote plyr.
+Com 52 pontos precisamos cerca de uma hora e dez minutos para rodar.......
+Mas para quem nao pode esperar, os dados tambem estao disponievies .....
+
+```{r echo = TRUE, eval = FALSE}
+
+dffl <- plyr::adply(dfrsm, .margins = 1, .fun = myextract)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+dffl <- data.frame(rsm) 
+```
+
+Acresentou novas colunas com valores de interesse.
+
+<P style="page-break-before: always">
+
+## 3) Resumo de dados
+### 3.1) Desmatamento por rio e por seis zonas
+Os valores calculados são uma proporção de área desmatado nos anos 2000-2018 em raios de 500 metros, 1 quilometro, 5 quilômetros e 10 quilômetros. Os dados em pontos cada 5 km ao longo de 276 quilômetros de rios (276086 pontos) . Vamos calcular comprimento de rio e valor media de desmatamento em seis zonas diferentes:
+
+```{r}
+plyr::ddply(dffl, .(rio, zone), summarise, 
+      fl_500m = round(mean(Prop01_500m),3), 
+      fl_1km = round(mean(Prop02_1km),3),
+      fl_5km = round(mean(Prop03_5km),3),
+      fl_10km = round(mean(Prop04_10km),3)
+      )
+```
+
+Agora, repetindo o mesmo processo, mas acrescentando resumos para 52 subzonas (cerca de 5 km cada) para um analise mais preciso. e Visualizar tabela, aproveitando funções disponíveis no pacote "sjPlot":
+```{r}
+dfsubzona <- plyr::ddply(dffl, .(rio, zone, subz_id), summarise, 
+      afl_500m = round(mean(Prop01_500m),3),  
+      bfl_1km = round(mean(Prop02_1km),3),
+      cfl_5km = round(mean(Prop03_5km),3),
+      dfl_10km = round(mean(Prop04_10km),3)
+)
+dfsubzona$zone <- relevel(dfsubzona$zone, ref="barragem-Amapari")
+sjPlot::tab_df(dfsubzona)
+```
+
+
+## 4) Gráficos 
+### 4.1) mostrando as diferenças em dematamento entre zonas
+
+```{r fig.width=5, fig.height=3}
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = bfl_1km)) + 
+  geom_boxplot()
+```
+
+Agora, através de ajustes no código, vamos fazer um gráfico mais elegante e mais informativo.....
+```{r fig.width=5, fig.height=3}
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = bfl_1km)) + 
+  geom_boxplot(aes(color=rio)) +
+  ylab("Proporção desmatado (raio 1km)") + xlab("Zona") + 
+  coord_flip() + 
+   theme_bw() + theme(legend.position=c(0.8, 0.8))
+```
+
+<P style="page-break-before: always">
+

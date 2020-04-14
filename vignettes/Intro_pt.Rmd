@@ -207,13 +207,13 @@ write.csv2(dfsubzona, file = "subzona.csv", row.names=FALSE)
 ### 4.1) mostrando as diferenças em dematamento entre zonas
 
 ```{r fig.width=5, fig.height=3}
-ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) + 
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = bfl_1km)) + 
   geom_boxplot()
 ```
 
 Agora, através de ajustes no código, vamos fazer um gráfico mais elegante e mais informativo.....
 ```{r fig.width=5, fig.height=3}
-ggplot2::ggplot(dfsubzona, aes(x = zone, y = afl_500m)) + 
+ggplot2::ggplot(dfsubzona, aes(x = zone, y = bfl_1km)) + 
   geom_boxplot(aes(color=rio)) +
   ylab("Proporção desmatado (raio 500 metros)") + xlab("Zona") + 
   coord_flip() + 
