@@ -23,8 +23,8 @@ Aqui vamos quantificar desmatamento entre 2000 - 2018 ao longo de 276 quilômetr
 Vamos aproveitar dados mostrando valores de [desmatamento](http://earthenginepartners.appspot.com/science-2013-global-forest) , "Global Forest Change" desenvolvido por Hansen e co-autores 2013 (https://science.sciencemag.org/content/342/6160/850) e obtidos de no site   https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.6.html .
 
 Com menos de 100 linhas de código vamos:
-1) carregar dados; 2) olhar mapas (SIG); 3) gerar tabelas com resumos; 
-4) visulizar resultados em gráficos; e 5) rodar anlises estatisticas.
+1) carregar dados; 2) olhar mapas (SIG); 3) extrair dados rster com pontos e poligonos 4) gerar tabelas com resumos; 
+5) visulizar resultados em gráficos; e 6) rodar anlises estatisticas.
 
 ## Pacotes
 Para fazer todo isso em menos de 100 linhas, precisamos os seguintes pacotes, que deve esta instalado antes: [plyr](http://had.co.nz/plyr/), [tidyverse](https://www.tidyverse.org/), [sf](https://r-spatial.github.io/sf/), [mapview](https://r-spatial.github.io/mapview/), [sjPlot](https://strengejacke.github.io/sjPlot/), [sjmisc](https://strengejacke.github.io/sjmisc/articles/exploringdatasets.html), [sjlabelled](https://strengejacke.github.io/sjlabelled/articles/labelleddata.html), [interactions](https://interactions.jacob-long.com/).
@@ -88,6 +88,7 @@ rsl <- sf::st_read(meuSIG, layer = "centerline")
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 rsm <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints", quiet=TRUE)
+rsmhansen <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "midpoints_hansen", quiet=TRUE)
 rsl <- sf::st_read(system.file("vector/rivers.GPKG", package="gisdata"), layer = "centerline", quiet=TRUE)
 ```
 
@@ -139,7 +140,7 @@ plot(hansen)
 ```
 
 
-E agora focando em uma camada mostrando anos onde houve perda de floresta (cores mostrando o ano). Acresentando tambem a linha central de rios e pontos cada 5 km (cores representando 52 subzonas, comprimento de cerca de 5 km cada).
+E agora focando em uma camada mostrando os anos onde houve perda de floresta (cores mostrando o ano). Acresentando tambem a linha central de rios e pontos cada 5 km (cores representando 52 subzonas, comprimento de cerca de 5 km cada).
 ```{r fig.width=4.5, fig.height=4.5}
 ly <- subset(hansen,"Hansen_GFC.2018.v1.6_lossyear_10N_060W")
 plot(ly)
@@ -150,12 +151,22 @@ plot(rsm, add=TRUE)
 
 <P style="page-break-before: always">
 
-## 2) Extrair valores de Carregar arquivos com dados de SIG.
+## 2) Extrair valores de camadas de raster.
 
 Queremos saber ... Entao precisamos desenvolver uma função proprio por isso. 
 Existe uma funçao "extract" no pacote raster feito para isso. Mas,deveremos ajustar e informar informaçoes para nosso caso em especifico.......
 
-```{r}
+Temos camadas de raster ja prontas, precisamos selecionar duas.
+Uma com a cobertura de floresta (valor = 1) em 2000, e a outra camada com floresta perdida (valor = 1) entre 2000- 2018. Assim podemos calcular a proporçao de floresta perdida atraves somatorio de perdida / somatorio de floresta.
+```{r }
+tc2000 <- subset(hansen,"treecover_reclass")
+lyrc <- subset(hansen,"lossyear_reclass")
+
+```
+
+Funçao para calcular proporçao de floresta perdida em raois de 500m, 1km, 5km, 10 km e 40 km. 
+
+```{r echo = TRUE, eval = FALSE}
 myextract <- function(x){
 sbp <- st_as_sf(x[ , c("geom")])
 sbp <- as(st_transform(sbp, crs(tc2000)),"Spatial")
@@ -215,15 +226,23 @@ dfrsm <- data.frame(rsm)
 
 E depois passar para funcao "adply" no pacote plyr.
 Com 52 pontos precisamos cerca de uma hora e dez minutos para rodar.......
-Mas para quem nao pode esperar, os dados tambem estao disponievies .....
+
 
 ```{r echo = TRUE, eval = FALSE}
 
 dffl <- plyr::adply(dfrsm, .margins = 1, .fun = myextract)
 ```
 
+Mas para quem nao pode esperar, os dados tambem estao disponievies .....Rodar para carregar dados ja calulados....
+
+```{r echo = TRUE, eval = FALSE}
+
+dffl <- sf::st_read(meuSIG, layer = "midointshansen")
+```
+
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-dffl <- data.frame(rsm) 
+dffl <- data.frame(rsmhansen) 
 ```
 
 Acresentou novas colunas com valores de interesse.
