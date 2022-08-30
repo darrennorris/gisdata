@@ -29,10 +29,10 @@ Resolução e extensão tendem a covariar – investigações com maior extensã
 
 Exemplo com uma raster
 Uma raster é um matrix de valores com coordenados geograficas.
-Inicialmente iremos gerar uma paisagem bem simples, de 6 por 6 pixels.
+Inicialmente iremos gerar uma raster representando uma paisagem bem simples, de 6 por 6 pixels.
 Você já deve saber que pixel eh a unidade básica de uma imagem (lembra da camera do seu celular, 10Mb ou algo assim?!). Vocês devem ter
 visto sobre pixels e resolução no mesmo de geoprocessamento. Aqui podemos tratar o pixel como a resolução. Vamos dizer que temos um pixel de 10 metros (res=10 no bloco de código), ou seja,
-uma quadrado de 10 por 10m, sendo essa, a menor unidade mapeável (tambem tem relação com escala cartográfica!).
+uma quadrado de 10 por 10m, sendo essa, a menor unidade mapeável (tambem tem ligação com escala cartográfica!).
 
 ```{r, echo=FALSE}
 library(terra)
@@ -40,7 +40,6 @@ library(terra)
 pai_sim <- rast(ncols=6, nrows=6, 
                 xmin=1, xmax=60, 
                 ymin=1, ymax=60, 
-                crs = NA,
                 res=10) 
 #E essa atribui valores para os pixels criados acima
 values(pai_sim)<-1:ncell(pai_sim)  
