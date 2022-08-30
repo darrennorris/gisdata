@@ -1,0 +1,50 @@
+---
+title: "Escala"
+author: "Darren Norris"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Intro_pt}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Apresentação
+Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial. Assim sendo, o conceito de escala tenta representar essas dimensões e, mais importante, ajudar nos apresentá-los de uma forma que facilite o entendimento sobre os processos e padrões sendo estudados.
+
+É muito importante ficar claro para você o que é escala (e o que não é!) e qual a importância desse conceito na elaboração do desenho experimental de um estudo, na coleta de dados, nas análises e na tomada de decisão. Esse tutorial te ajudará nisso!
+
+O termo escala refere-se à dimensão ou domínio espaço-temporal  de um processo ou padrão. Na ecologia da paisagem, a escala é frequentemente descrita por sua componentes: resolução e extensão. 
+resolução :  menor unidade espacial de medida para um padrão ou processo.
+extensão: descreve o comprimento ou tamanho de área sob investigação.
+
+Resolução e extensão tendem a covariar – investigações com maior extensão tendem a ter resolução maiores também. Parte dessa covariância é prática: é difícil trabalhar em grandes extensões com dados coletados em tamanhos de resolução finos. No entanto, parte dessa covariância também é conceitual: muitas vezes em grandes extensões, podemos esperar que processos operando em resolução muito finos forneçam somente “ruído” e não dados/informações relevantes sobre os sistemas. Como  os desafios computacionais diminuíram e a disponibilidade de dados de alta resolução aumentou, a covariância entre resolução e extensão nas investigações diminuiu.
+
+Exemplo com uma raster
+Uma raster é um matrix de valores com coordenados geograficas.
+Inicialmente iremos gerar uma paisagem bem simples, de 6 por 6 pixels.
+Você já deve saber que pixel eh a unidade básica de uma imagem (lembra da camera do seu celular, 10Mb ou algo assim?!). Vocês devem ter
+visto sobre pixels e resolução no mesmo de geoprocessamento. Aqui podemos tratar o pixel como a resolução. Vamos dizer que temos um pixel de 10 metros (res=10 no bloco de código), ou seja,
+uma quadrado de 10 por 10m, sendo essa, a menor unidade mapeável (tambem tem relação com escala cartográfica!).
+
+```{r, echo=FALSE}
+library(terra)
+#Essa linha de comando gera a paisagem virtual (simulação)
+pai_sim <- rast(ncols=6, nrows=6, 
+                xmin=1, xmax=60, 
+                ymin=1, ymax=60, 
+                crs = NA,
+                res=10) 
+#E essa atribui valores para os pixels criados acima
+values(pai_sim)<-1:ncell(pai_sim)  
+plot(pai_sim) #essa plota
+text(pai_sim) #Essa coloca os valores dos pixels
+```
+

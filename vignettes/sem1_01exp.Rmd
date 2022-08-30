@@ -1,0 +1,280 @@
+---
+title: 'Seminários 1: Expectativas'
+subtitle: |
+ | Resultados obtidos do questionário: "Aulas remotas efetivas?"
+ |
+ | Darren Norris & Fernanda Michalski
+ |
+ | Curso de Ciências Ambientais, Universidade Federal do Amapá (UNIFAP): https://www2.unifap.br/cambientais/ 
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Objetivo
+Saber um pouco sobre as expectativas e recursos que os alunos matriculados em Seminários 1 podem acessar atualmente. As respostas servem para informar o desenvolvimento de aulas remotas efetivas. 
+
+Para isso fizemos sete perguntas aos alunos sobre suas expectativas e os recursos disponíveis.
+
+```{r, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library(plyr)
+library(tidyverse)
+library(readxl)
+library(tidytext)
+library(tm)
+library(wordcloud2)
+
+meuf <- "C:\\Users\\Darren\\Documents\\EcologyConservation2014\\graduacao\\aulas_grad\\202003_seminarios1\\quest01.xlsx"
+
+df1 <- readxl::read_excel(meuf)
+naluno <- length(unique(df1$aid))
+nmiss <- length(which(is.na(df1$`p01_expect`)))
+nrep <- naluno - nmiss
+nper <- round((nrep/naluno)*100,0)
+```
+
+
+## Achados principais
+
+* A baixa taxa de respostas é preocupante. Mostrando que a maioria da turma matriculada em Seminários 1 não tem acesso e/ou interesse em participar ativamente com ensino remoto durante o calendário acadêmico suplementar.
+
+Dos alunos que responderam, podemos afirmar que:-
+
+* A maioria que respondeu tem acesso a internet e computador/laptop durante a maioria dos dias da semana. Mas, vamos desenvolver atividades em uma forma que todos podem acessar e participar. Por exemplo, considerando a instabilidade da internet nos não vamos apresentar aulas ao vivo prolongadas. 
+
+* A maioria que responderam tem familiaridade com aplicativos de [Microsoft Office](https://www.microsoft.com/pt-br/microsoft-365) e/ou [Google workspace (antigo G-suite)](https://workspace.google.com/intl/pt-BR/) (mas não com aplicativos/ferramentas de [LibreOffice](https://pt-br.libreoffice.org/) ).
+
+* A grande maioria que respondeu assistem videos online durante a semana.
+
+\newpage
+
+## Resultados
+
+Como primeira atividade do curso, fizemos sete perguntas aos alunos. De um total de `r naluno` alunos matriculados, `r nrep` (`r nper`%) responderam as perguntas.
+
+Seguindo os princípios de transparência e [reprodutibilidade](https://book.fosteropenscience.eu/pt/02IntroducaoaCienciaAberta/04Investigacao_reprodutivel_e_analise_de_dados.html) segue as analises e resultados obtidos do questionário: "Aulas remotas efetivas?". O questionário foi disponibilizado na SIGAA entre 3 de Novembro 2020 e 14 de Dezembro 2020.
+
+Aqui é simplesmente para conhecimento. Apresentamos os resultados na forma de gráficos, junto com o codigo, assim qualquer um que tem interesse pode reproduzir. O texto é organizado em blocos de código (caixas cinzas) e na sequencia com os resultados obtidos.
+
+O objetivo não é de apresentar detalhes sobre os cálculos/métodos estatísticas ou as funções no [R](https://cran.r-project.org/).
+
+### Pacotes
+
+Deve Instalar os pacotes necessários antes de começar:
+
+```{r echo=TRUE, eval=FALSE}
+install.packages(c("plyr","tidyverse", "readxl", "tidytext", "tm","wordcloud2"))
+```
+
+Carregar pacotes: 
+
+```{r, echo=TRUE, eval=FALSE, message=FALSE}
+library(plyr)
+library(tidyverse)
+library(readxl)
+library(tidytext)
+library(tm)
+library(wordcloud2)
+
+```            
+
+### 1) Carregar arquivos com dados.
+
+#### 1.1) Carregar dados (arquivo do Excel)
+Você deve obter o arquivo de Excel "quest01.xlsx" disponivel no SIGAA.
+Dentro do arquivo as respostas obtidas estão apresentadas (em uma forma anônima).
+
+Agora avisar [R](https://cran.r-project.org/) sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "quest01.xlsx": 
+
+```{r echo=TRUE, eval=FALSE}
+meuf <- file.choose()
+```
+
+O código abaixo vai carregar os dados e criar um objeto "df1".
+Agora temos dados com os resultados obtidos do primeiro questionário.
+
+```{r echo = TRUE, eval=FALSE}
+
+df1 <- readxl::read_excel(meuf)
+
+```
+
+```{r }
+# olhar conteudo do objecto "df1"
+str(df1)
+```
+
+
+
+### 2) Expectativas.
+
+A primeira pergunta foi "Considerando a situação atual (aulas remotas) e os objetivos da disciplina, quais são as suas expectativas sobre “Seminários 1”? Quais são os aprendizados que seria mais uteis para você?".
+
+As respostas variam nas informações apresentadas. Seguem três exemplos ilustrativos:
+
+* "Com esta matéria acredito que desenvolverei mais conhecimento sobre as temáticas que envolvem o curso, fazendo com que assim eu tenha uma  "luz" para a preparação de meu TCC e até mesmo na minha vida, já que com o período de crise que estamos vivendo, eu fiquei totalmente improdutiva em todos os sentidos acadêmicos e sociais."
+
+* "A minha expectativa é que ao final da disciplina eu esteja mais apta a elaboração e realização da apresentação de trabalhos científicos, monografia, palestras, etc. Espero que as minhas dúvidas sejam sanadas e desde forma eu possa realizar o melhor de minha capacidade.
+"
+
+* "Não sei o que esperar porém espero adquirir conhecimentos ao final da disciplina."
+
+
+#### 2.1) Wordcloud
+
+Segue uma imagem composta por palavras usadas nas respostas, onde o tamanho de cada palavra indica sua frequência (ou importância relativa).
+
+```{r }
+#Codigo para obter um wordcloud
+set.seed(1234)
+dfunt <- unnest_tokens(df1, word, p01_expect)
+# Excluindo palavras que podem ser consideradas irrelevantes para o conjunto de 
+# resultados a ser exibido
+awords <- c("agora","so", "se", "sei","nao", "ateh", "pre", "vez", "ateh", "soh", 
+            "ser","creio", "sera", "serah","cada", "eh", "real", 1:20, "forma",
+            "posso", "possa", "é", "etc", "ja", "tal", "que", "desde", "acerca", 
+            "aulas", "espero", "trás", "quê", "ter", "nessa", "parece", "assim", 
+            "expectativas", "portanto", "academicos", "acadêmicos")
+dwords <- tm::stopwords("portuguese")
+swords <- unique(c(awords, dwords))
+selsw <- which(dfunt$word %in% swords)
+dfunt <- dfunt[-selsw, ]
+dfunt <- dfunt %>%
+  count(word, sort = TRUE, name="freq")
+
+```
+
+Agora podemos visualizar as palavras mais comuns.....
+
+```{r wordcloud, echo=TRUE}
+#Palavras escritas pelo menos duas vezes nas respostas
+self <- which(!is.na(dfunt$word) & dfunt$freq>1)
+wordcloud2(data = dfunt[self, ])
+```
+
+\newpage
+
+
+### 3) Recursos 
+Agora sobre disponibilidade e uso de recursos. 
+
+Olhamos três grupos distintos; todos importantes para aulas remotas. Primeiro, sobre uso de internet e computadores, segundo sobre grupos de aplicativos e por ultimo videos online.
+
+
+#### 3.1) Acesso de internet e computador/laptop
+
+Segue as respostas para as perguntas "Você tem acesso a internet estável e segura?" e  "Você tem acesso a um computador e/ou laptop?". As respostas incluíam uma das alternativas: não sei, nunca, raramente, maioria dos dias, sempre.
+
+
+```{r }
+# Codigo para Grupo 1: uso de internet e computador/laptop 
+# Organizar dados para fazer as figuras
+nrep <- length(which(!is.na(df1$`p01_expect`)))
+
+dfeq<- pivot_longer(df1[, c('aid','p02_internet', 'p03_comp')], !aid, names_to = "recursos", values_to = "resposta")
+ 
+dfeq$recursos <- factor(dfeq$recursos)
+levels(dfeq$recursos) <- c("internet", "computador/laptop")
+#table(dfeq$resposta)
+dfeq$respostaf <- factor(dfeq$resposta, 
+                            levels = c("raramente", 
+                                    "maioria dos dias", "sempre"))
+#Obter resumo com proproçao e contagem
+seleq <- which(!is.na(dfeq$resposta)) 
+dfeq_sum <- plyr::ddply(dfeq[seleq, ], .(recursos, respostaf), summarise, 
+            count_eq = length(respostaf),
+            prop_eq = length(respostaf) / nrep 
+            )
+#Grafico
+ggplot(dfeq_sum, aes(x = respostaf, y = prop_eq, fill=respostaf)) +
+  geom_col(colour="black") +
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~recursos) +
+  labs(x = NULL, y = "Respostas (%)") + 
+  scale_fill_brewer(palette = "Greens") +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  
+```
+
+
+#### 3.2) Uso de aplicativos de "escritório" / "produtividade"
+
+Segue as respostas para as três perguntas "Quantas vezes por semana você usa aplicativos" : G-suite, Microsoft Office e LibreOffice. As respostas incluíam uma das alternativas:  Nunca ouvir falar ; zero ; menos de cinco vezes; mais de cinco vezes.
+
+```{r fig.width=10, fig.height=6}
+# Grupo 2: aplicativos
+# Organizar dados para fazer as figuras
+dfap <- pivot_longer(df1[, c('aid','p04_gsuite', 'p05_ms','p07_lo')], !aid, names_to = "recursos", values_to = "resposta")
+
+dfap$recursos <- factor(dfap$recursos)
+levels(dfap$recursos) <- c("G-suite", "Microsoft Office", "LibreOffice")
+
+#table(dfap$resposta) # need to check how many of the possible levels
+dfap$respostaf <- factor(dfap$resposta, 
+                            levels = c("nunca ouvir falar", "zero", 
+                                       "menos de cinco vezes", "mais de cinco vezes") 
+)
+#Resumo com contagem e proporçao
+selap <- which(!is.na(dfap$resposta)) 
+dfap_sum <- plyr::ddply(dfap[selap, ], .(recursos, respostaf), summarise, 
+            count_ap = length(respostaf),
+            prop_ap = length(respostaf) / nrep 
+            )
+
+#Grafico
+ggplot(dfap_sum, aes(x = respostaf, y = prop_ap, fill=respostaf)) +
+  geom_col(color="black") +
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~recursos) +
+  labs(x = NULL, y = "Respostas (%)") + 
+  scale_fill_brewer(palette = "Greens") +
+  theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+```
+
+#### 3.3) Videos online
+
+Segue as respostas para a pergunta "Quantas vezes por semana você visualiza vídeos online?".
+
+```{r}
+# Grupo 3: videos
+# Organizar dados para fazer as figuras
+dfvid <- pivot_longer(df1[, c('aid','p06_vids')], !aid, names_to = "recursos", values_to = "resposta")
+
+dfvid$recursos <- factor(dfvid$recursos)
+levels(dfvid$recursos) <- c("Videos online")
+
+#table(dfvid$resposta) # need to check how many of the possible levels
+dfvid$respostaf <- factor(dfvid$resposta, 
+                            levels = c("zero", 
+                                       "menos de cinco vezes", "mais de cinco vezes") 
+)
+
+# resumo com contagem e proporçao
+selvid <- which(!is.na(dfvid$resposta)) 
+dfvid_sum <- plyr::ddply(dfvid[selvid, ], .(recursos, respostaf), summarise, 
+            count_vid = length(respostaf),
+            prop_vid = length(respostaf) / nrep 
+            )
+
+#Grafico
+ggplot(dfvid_sum, aes(x = respostaf, y = prop_vid, fill=respostaf)) +
+  geom_col(colour="black") +
+  scale_y_continuous(labels=scales::percent) +
+  facet_wrap(~recursos) + 
+  scale_fill_brewer(palette = "Greens") +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = "Respostas (%)")
+
+```
+
+
