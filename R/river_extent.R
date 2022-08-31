@@ -5,6 +5,7 @@ library(sf)
 library(sp)
 library(raster)
 library(terra)
+library(ggspatial)
 meuSIG <- "inst/vector/rivers.GPKG"
 rsl <- sf::st_read(meuSIG, layer = "centerline")
 rsl_50km <- st_union(st_buffer(rsl, dist = 50000))
@@ -34,6 +35,9 @@ e2 <- ext(vect(sf_island_110m))
 rsmall <- crop(r, e2, snap="out") 
 plot(rsmall)
 names(rsmall) <- "mapbiomas_2020"
+writeRaster(rsmall, "inst/raster/amostra_mapbiomas_2020.tif", datatype = "INT2U", overwrite = TRUE)
+
+
 classe_valor <- c(3, 12, 33)
 classe_legenda <- c("Formação Florestal", 
                    "Formação Campestre", "Rio, Lago e Oceano")
@@ -44,13 +48,17 @@ coltab(rsmall) <- mycoltab
 plot(rsmall)
 
 rsmall_df <- as.data.frame(rsmall, xy = TRUE)
-ggplot(data = rsmall_df) +
-  geom_raster(aes(x = x, y = y, 
-                  fill = factor(mapbiomas_2020))) + 
+
+cls <- data.frame(id=c(3,12,33), 
+                  classe=c("Formação Florestal", 
+                           "Formação Campestre", "Rio, Lago e Oceano"))
+levels(rsmall) <- cls
+ggplot() +
+  layer_spatial(rsmall) +
+  #geom_raster(aes(x = x, y = y, 
+  #                fill = factor(mapbiomas_2020))) + 
   scale_fill_manual("classe", 
                       values = classe_cores,
                       labels = classe_legenda) + 
-  geom_text(aes(x = x, y = y, 
-                label = mapbiomas_2020)) +
-  coord_equal()
-writeRaster(rsmall, "amostra_mapbiomas_2020.tif", datatype = "INT2U", overwrite = TRUE)
+  geom_text(data = rsmall_df, aes(x = x, y = y, 
+                label = mapbiomas_2020)) 
