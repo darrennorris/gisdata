@@ -41,9 +41,10 @@ pai_sim <- rast(ncols=6, nrows=6,
                 xmin=1, xmax=60, 
                 ymin=1, ymax=60, 
                 res=10) 
-#E essa atribui valores para os pixels criados acima
-values(pai_sim)<-1:ncell(pai_sim)  
+#E essa atribui valores ("values") para os pixels criados acima
+values(pai_sim)<-1 
 plot(pai_sim) #essa plota
 text(pai_sim) #Essa coloca os valores dos pixels
 ```
 
+Agora vamos olhar um exemplo do mundo real. Uma pequena amostra do Rio Araguari, perto de Porto Grande. O ponto central da raster é de longitude: -51.405912 latitude: 0.726236.
