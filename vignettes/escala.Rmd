@@ -29,7 +29,7 @@ O termo escala refere-se à dimensão ou domínio espaço-temporal de um process
 
 Resolução e extensão tendem a covariar – investigações com maior extensão tendem a ter resolução maiores também. Parte dessa covariância é prática: é difícil trabalhar em grandes extensões com dados coletados em tamanhos de resolução finos. No entanto, parte dessa covariância também é conceitual: muitas vezes em grandes extensões, podemos esperar que processos operando em resolução muito finos forneçam somente “ruído” e não dados/informações relevantes sobre os sistemas. Como  os desafios computacionais diminuíram e a disponibilidade de dados de alta resolução aumentou, a covariância entre resolução e extensão nas investigações diminuiu.
 
-### Exemplo com uma raster
+### Primeiro passos com uma raster
 Uma raster é um matriz de valores com coordenados geográficos. Cada pixel de uma raster representa uma região geográfica, e o valor do pixel representa uma característica dessa região ([Dados raster](https://docs.qgis.org/2.8/pt_BR/docs/gentle_gis_introduction/raster_data.html)).
 
 Em geral é necessário baixar alguns pacotes para que possamos fazer
@@ -59,13 +59,10 @@ plot(pai_sim) #essa plota
 text(pai_sim) #Essa coloca os valores dos pixels
 ```
 
-Agora vamos olhar um exemplo do mundo real. Uma pequena amostra do Rio Araguari, perto de Porto Grande. O ponto central da raster é de longitude: -51.405912 latitude: 0.726236. O arquivo tem a classificação 
-da terra feito pela [MapBiomas](https://mapbiomas.org/), que produz mapeamento anual da cobertura e uso da terra desde 1985.
+Agora vamos olhar um exemplo do mundo real. Uma pequena amostra do Rio Araguari, perto de Porto Grande. O ponto central da raster é de longitude: -51.405912 latitude: 0.726236. O arquivo tem uma classificação da terra feito pela [MapBiomas](https://mapbiomas.org/), que produz mapeamento anual da cobertura e uso da terra desde 1985.
 
-Baixar arquivo com os dados (formato ".tif"). 
-
-Link: [https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif](https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif) .
-Lembrando-se de salvar o arquivo ("amostra_mapbiomas_2020.tif")  em um local conhecido no seu computador. Lembre-se, para facilitar, os arquivos deve ficar no mesmo diretório do seu código (verifique com <code>getwd()</code>).
+Baixar arquivo com os dados (formato ".tif"), link: [https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif](https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif) .
+Lembrando-se de salvar o arquivo ("amostra_mapbiomas_2020.tif")  em um local conhecido no seu computador. Para facilitar, os arquivos deve ficar no mesmo diretório do seu código (verifique com <code>getwd()</code>).
 
 ```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 rin <- "C:/Users/user/Documents/Articles/gis_layers/gisdata/inst/raster/amostra_mapbiomas_2020.tif"
@@ -109,22 +106,18 @@ classe_legenda <- c("Formação Florestal",
                    "Formação Campestre", "Rio, Lago e Oceano")
 classe_cores <- c("#006400", "#B8AF4F", "#0000FF") 
 
-cls <- data.frame(id=classe_valor, 
-                  classe=classe_legenda)
-levels(ramostra) <- cls
-
-
 ```
 
 Agora podemos fazer o mapa
 
 
 ```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Paisagem simples com valores e classes determinadas de uso e cobertura da terra."}
-ggplot() +
-  layer_spatial(ramostra) +
+ggplot(ramostra_df, aes(x=x, y=y)) +
+  geom_raster(aes(fill = factor(mapbiomas_2020))) +
   scale_fill_manual("classe", 
-                      values = classe_cores) + 
-     scale_x_continuous(breaks = c(-51.407,-51.406, -51.405)) +
+                      values = classe_cores, 
+                    labels = classe_legenda) + 
+  coord_equal() +
   geom_text(data = ramostra_df, aes(x = x, y = y, 
                 label = mapbiomas_2020)) + 
   theme(legend.position="top") + 
@@ -132,9 +125,25 @@ ggplot() +
 
 ```
 
-Alterando a resolução
+## Alterando a resolução
  
-Agora iremos degradar a resolução desses dados, ou seja, iremos alterar o tamanho dos pixels. Por exemplo,
-iremos juntar 4 pixels em um único pixel. Como você acha que podemos fazer isso? Quais valores esse pixel
-que vai substituir os 4 originais deve ter?
-Existem diversas maneiras de se fazer isso, uma das formas é através da média.
+Alterando a resolução serve como exemplo mostrando como os passos/etapas/cálculos mude dependendo o tipo de 
+dados. Ou seja, é preciso adotar metodologias diferentes para dados categóricos (por exemplo classificação de cobertura da terra) e dados contínuos  (por exemplo distância até rio).
+
+Alterando a resolução às vezes seria necessário, por exemplo, quando preciso padronizar dados oriundos de fontes diferentes com resoluções diferentes e/ou para reduzir a complexidade da modelagem. Lembrando - em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima.
+
+Agora iremos degradar a resolução desses dados, ou seja, iremos alterar o tamanho dos pixels. Como exemplo, iremos juntar 3 pixels em um único pixel. Como você acha que podemos fazer isso? Quais valores esse pixel que vai substituir os 3 originais deve ter? Existem diversas maneiras de se fazer isso, uma das formas é através da média.
+
+```{r}
+
+#ramostra_modal<-aggregate(ramostra, fact=2, fun=modal)
+
+```
+
+Visualizr
+```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Paisagem simples com valores e classes determinadas de uso e cobertura da terra."}
+
+#
+
+```
+
