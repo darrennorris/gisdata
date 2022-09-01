@@ -38,7 +38,8 @@ as nossas análises.
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(terra)
-library(ggspatial)
+library(sf)
+
 ```
 
 
@@ -47,7 +48,7 @@ Você já deve saber que pixel eh a unidade básica de uma imagem (lembra da cam
 visto sobre pixels e resolução no mesmo de geoprocessamento. Aqui podemos tratar o pixel como a resolução. Vamos dizer que temos um pixel de 10 metros (res=10 no bloco de código), ou seja,
 uma quadrado de 10 por 10m, sendo essa, a menor unidade mapeável (tambem tem ligação com escala cartográfica!).
 
-```{r, echo=TRUE, message=FALSE, warning=FALSE}
+```{r, echo=TRUE, message=FALSE, warning=FALSE, fig.width =4, fig.height = 2.5}
 #Essa linha de comando gera a paisagem virtual (simulação)
 pai_sim <- rast(ncols=6, nrows=6, 
                 xmin=1, xmax=60, 
@@ -79,7 +80,7 @@ ramostra <- rast(file.choose())
 Agora podemos verificar informcões sobre o raster (metadados) e 
 plotar para verificar.
 
-```{r}
+```{r, fig.width =4, fig.height = 2.5}
 ramostra
 plot(ramostra)
 ```
@@ -93,13 +94,16 @@ Para entender o que os valores representam no mundo real precisamos de uma refer
 
 Olhando a legenda ([Cod_Class_legenda_Col6_MapBiomas_BR.pdf](https://mapbiomas-br-site.s3.amazonaws.com/downloads/Colecction%206/Cod_Class_legenda_Col6_MapBiomas_BR.pdf)), sabemos que "3", "12" e "33" representem cobertura de "Formação Florestal", "Formação Campestre", e "Rio, Lago e Oceano". Então podemos fazer um mapa com mais informações.
 
-Daqui pra frente vamos aproveitar uma forma mais elegante de apresentar mapas e gráficos. Isso seria atraves a função "ggplot" (pacote [ggplot2](https://ggplot2.tidyverse.org/)), que faz parte do "tidyverse". Mais exemplos no [R cookbook](http://www.cookbook-r.com/Graphs/) : http://www.cookbook-r.com/Graphs/ .
+Daqui pra frente vamos aproveitar uma forma mais elegante de apresentar mapas e gráficos. Isso seria atraves a função "ggplot" (pacote [ggplot2](https://ggplot2.tidyverse.org/)), que faz parte do "tidyverse". Mais exemplos no [R cookbook](http://www.cookbook-r.com/Graphs/) : http://www.cookbook-r.com/Graphs/ . 
+
+E com mais exemplos de mapas e dados espaciais no R:
+[sf e ggplot2](https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html) : https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html
+
+[Capitulo 8](https://geocompr.robinlovelace.net/adv-map.html) no livro [Geocomputation with R](https://geocompr.robinlovelace.net/) : https://geocompr.robinlovelace.net/adv-map.html
+
+Primeiramente precisamos incluir as informações relevantes da legenda.
 
 ```{r}
-
-# Passo necessario somente para mostrar os valores
-ramostra_df <- as.data.frame(ramostra, xy = TRUE)
-
 # legenda e cores na sequencia correta
 classe_valor <- c(3, 12, 33)
 classe_legenda <- c("Formação Florestal", 
@@ -108,10 +112,13 @@ classe_cores <- c("#006400", "#B8AF4F", "#0000FF")
 
 ```
 
-Agora podemos fazer o mapa
+Agora podemos fazer o mapa com as classes e os cores seguindo o padrão recomendado pela MapBiomas.
 
 
 ```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Paisagem simples com valores e classes determinadas de uso e cobertura da terra."}
+# Passo necessario para mostrar os valores
+ramostra_df <- as.data.frame(ramostra, xy = TRUE)
+
 ggplot(ramostra_df, aes(x=x, y=y)) +
   geom_raster(aes(fill = factor(mapbiomas_2020))) +
   scale_fill_manual("classe", 
@@ -130,20 +137,74 @@ ggplot(ramostra_df, aes(x=x, y=y)) +
 Alterando a resolução serve como exemplo mostrando como os passos/etapas/cálculos mude dependendo o tipo de 
 dados. Ou seja, é preciso adotar metodologias diferentes para dados categóricos (por exemplo classificação de cobertura da terra) e dados contínuos  (por exemplo distância até rio).
 
-Alterando a resolução às vezes seria necessário, por exemplo, quando preciso padronizar dados oriundos de fontes diferentes com resoluções diferentes e/ou para reduzir a complexidade da modelagem. Lembrando - em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima.
+Alterando a resolução às vezes seria necessário, por exemplo, quando preciso padronizar dados/imagens oriundos de fontes diferentes com resoluções diferentes e/ou para reduzir a complexidade da modelagem. Lembrando - em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima.
 
-Agora iremos degradar a resolução desses dados, ou seja, iremos alterar o tamanho dos pixels. Como exemplo, iremos juntar 3 pixels em um único pixel. Como você acha que podemos fazer isso? Quais valores esse pixel que vai substituir os 3 originais deve ter? Existem diversas maneiras de se fazer isso, uma das formas é através da média.
+Agora iremos degradar a resolução desses dados, ou seja, iremos alterar o tamanho dos pixels. Como exemplo, iremos juntar (agregar) 3 pixels em um único pixel. Como você acha que podemos fazer isso? Quais valores esse pixel que vai substituir os 3 originais deve ter? Existem diversas maneiras de se fazer isso, uma das formas é através da média.
 
 ```{r}
 
-#ramostra_modal<-aggregate(ramostra, fact=2, fun=modal)
+ramostra_media<-aggregate(ramostra, fact=3, fun="mean")
+ramostra_media <- resample(ramostra, ramostra_media)
 
 ```
 
-Visualizr
-```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Paisagem simples com valores e classes determinadas de uso e cobertura da terra."}
+Visualizar. Os valores calculados pela função não fazem sentido para uma classificação categórica.
+```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Aggregação errado. Uso da média cria valores categóricos errados e impossíveis."}
+# Tidy
+as.data.frame(ramostra_media, xy = TRUE) %>% 
+  mutate(mapbiomas_2020 = round(mapbiomas_2020,1)) -> ramostra_media_df
+# Plot
+ggplot(ramostra_media_df, aes(x=x, y=y)) +
+  geom_raster(aes(fill = factor(mapbiomas_2020))) +
+  scale_fill_discrete("valor") + 
+  coord_equal() + 
+  geom_text(data = ramostra_media_df, aes(x = x, y = y, 
+                label = mapbiomas_2020)) 
 
-#
+```
+
+Outra opção é utilizar o valor mais comum da área, o que é particularmente adequado quando temos um mapa categórico, como por exemplo mata/não-mata, ou soja, floresta e pasto. Segue exemplo com o valor mais frequente (modal).
+```{r}
+ramostra_modal<-terra::aggregate(ramostra, fact=3, fun="modal")
+ramostra_modal <- resample(ramostra, ramostra_modal, method="near")
+```
+
+Visualizar
+```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Aggregação."}
+
+# Tidy
+ramostra_modal_df <- as.data.frame(ramostra_modal, xy = TRUE) 
+# Plot
+ggplot(ramostra_modal_df, aes(x=x, y=y)) +
+  geom_raster(aes(fill = factor(mapbiomas_2020))) +
+  scale_fill_discrete("valor") + 
+  coord_equal() + 
+  geom_text(data = ramostra_modal_df, aes(x = x, y = y, 
+                label = mapbiomas_2020)) 
+
+```
+
+Em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima. Aqui por exemplo, mudamos a proporção de cobertura florestal em nossa pequeno paisagem quando juntamos 3 pixels em um único. Ou seja, com cada passo mudamos a representção do mundo.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, dpi=300, fig.width =9, fig.height = 5, out.height=350, out.width=650, fig.cap="Mudanças causadas pela agregação."}
+bind_rows(as.polygons(ramostra, dissolve = FALSE) %>% 
+  st_as_sf() %>% mutate(type = "original"), 
+  as.polygons(ramostra_media, dissolve = FALSE) %>% 
+     st_as_sf() %>% mutate(type = "media", 
+                           mapbiomas_2020 = round(mapbiomas_2020,1)),
+  as.polygons(ramostra_modal, dissolve = FALSE) %>% 
+     st_as_sf() %>% mutate(type = "modal")) -> sf_grids
+
+sf_grids %>% 
+  ggplot() + 
+  geom_sf(aes(fill = factor(mapbiomas_2020))) +
+  scale_fill_discrete("valor") + 
+  scale_x_continuous(breaks = c(-51.4075, -51.4065, -51.4055)) +
+  #geom_text(aes(x = x, y = y, 
+  #              label = mapbiomas_2020)) + 
+  facet_wrap(~type) + 
+  theme(legend.position="top") + 
+  guides(fill=guide_legend(nrow=2,byrow=TRUE))
 
 ```
 

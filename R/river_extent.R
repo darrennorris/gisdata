@@ -17,26 +17,48 @@ myexent <- ext(vect(rsl_50km))
 
 
 # example 
-#Get adjacent cell numbers
 rin <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\raster\\mapbiomas_AP_utm_rio\\utm_cover_AP_rio_2020.tif"
 r <- rast(rin)
  #coordinates of point
 island <- data.frame(nome = "island", 
-                     coord_x = -51.405912, 
+                     coord_x = -51.406312, 
                      coord_y = 0.726236)
 #Converter para objeto espacial
 sf_island <- st_as_sf(island, 
                      coords = c("coord_x", "coord_y"),
                       crs = 4326)
 sf_island_utm <- st_transform(sf_island, crs = 31976)
-sf_island_110m <- st_buffer(sf_island_utm, dist=90)
+sf_island_110m <- st_buffer(sf_island_utm, dist=110)
 e2 <- ext(vect(sf_island_110m)) 
 
 rsmall <- crop(r, e2, snap="out") 
 plot(rsmall)
 names(rsmall) <- "mapbiomas_2020"
 writeRaster(rsmall, "inst/raster/amostra_mapbiomas_2020.tif", datatype = "INT2U", overwrite = TRUE)
+class(rsmall)
+signature(rsmall)
+ramostra_modal<-aggregate(rsmall, fact=3, fun="modal")
+plot(ramostra_modal)
 
+ramostra_mean<-aggregate(rsmall, fact=3, fun=mean)
+plot(ramostra_mean)
+
+plot(rsmall)
+x_modal <- resample(rsmall, ramostra_modal, method="near")
+plot(x_modal)
+x_mean <- resample(rsmall, ramostra_mean)
+plot(x_mean)
+
+y_polys <- as.polygons(x_modal, dissolve = FALSE) %>% 
+  st_as_sf() 
+
+bind_rows(as.polygons(rsmall, dissolve = FALSE) %>% 
+  st_as_sf() %>% mutate(type = "original"), 
+  as.polygons(x_modal, dissolve = FALSE) %>% 
+     st_as_sf() %>% mutate(type = "modal")) %>% 
+  ggplot() + 
+  geom_sf(aes(fill = factor(classification_2020))) + 
+  facet_wrap(~type)
 
 classe_valor <- c(3, 12, 33)
 classe_legenda <- c("Formação Florestal", 
