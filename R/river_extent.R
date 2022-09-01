@@ -7,6 +7,7 @@ library(raster)
 library(terra)
 library(ggspatial)
 meuSIG <- "inst/vector/rivers.GPKG"
+rsm <- sf::st_read(meuSIG, layer = "midpoints")
 rsl <- sf::st_read(meuSIG, layer = "centerline")
 rsl_50km <- st_union(st_buffer(rsl, dist = 50000))
 ggplot(rsl_50km) + 
@@ -14,7 +15,14 @@ ggplot(rsl_50km) +
   geom_sf(data = rsl)
 
 myexent <- ext(vect(rsl_50km)) 
-
+library(tmap)
+tm_shape(mapbiomas_2020_modal) +
+  tm_raster(title = "Classe", style = "cat", 
+            palette = "Set3") + 
+  tm_shape(rsl) + 
+  tm_lines()
+tm_
+  
 
 # example 
 rin <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\raster\\mapbiomas_AP_utm_rio\\utm_cover_AP_rio_2020.tif"

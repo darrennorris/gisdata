@@ -39,6 +39,8 @@ as nossas análises.
 library(tidyverse)
 library(terra)
 library(sf)
+library(mapview)
+library(tmap)
 
 ```
 
@@ -60,7 +62,7 @@ plot(pai_sim) #essa plota
 text(pai_sim) #Essa coloca os valores dos pixels
 ```
 
-Agora vamos olhar um exemplo do mundo real. Uma pequena amostra do Rio Araguari, perto de Porto Grande. O ponto central da raster é de longitude: -51.405912 latitude: 0.726236. O arquivo tem uma classificação da terra feito pela [MapBiomas](https://mapbiomas.org/), que produz mapeamento anual da cobertura e uso da terra desde 1985.
+Agora vamos olhar um exemplo do mundo real. Uma pequena amostra do Rio Araguari, perto de Porto Grande. O ponto central da raster é de longitude: -51.406312 latitude: 0.726236. O arquivo tem uma classificação da terra feito pela [MapBiomas](https://mapbiomas.org/), que produz mapeamento anual da cobertura e uso da terra no Brasil desde 1985.
 
 Baixar arquivo com os dados (formato ".tif"), link: [https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif](https://github.com/darrennorris/gisdata/blob/master/inst/raster/amostra_mapbiomas_2020.tif) .
 Lembrando-se de salvar o arquivo ("amostra_mapbiomas_2020.tif")  em um local conhecido no seu computador. Para facilitar, os arquivos deve ficar no mesmo diretório do seu código (verifique com <code>getwd()</code>).
@@ -74,7 +76,6 @@ Carregar o arquivo com o função <code>file.choose()</code>, que faz a busca pa
 ```{r eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
 #
 ramostra <- rast(file.choose())
-
 ```
 
 Agora podemos verificar informcões sobre o raster (metadados) e 
@@ -109,7 +110,6 @@ classe_valor <- c(3, 12, 33)
 classe_legenda <- c("Formação Florestal", 
                    "Formação Campestre", "Rio, Lago e Oceano")
 classe_cores <- c("#006400", "#B8AF4F", "#0000FF") 
-
 ```
 
 Agora podemos fazer o mapa com as classes e os cores seguindo o padrão recomendado pela MapBiomas.
@@ -142,10 +142,8 @@ Alterando a resolução às vezes seria necessário, por exemplo, quando preciso
 Agora iremos degradar a resolução desses dados, ou seja, iremos alterar o tamanho dos pixels. Como exemplo, iremos juntar (agregar) 3 pixels em um único pixel. Como você acha que podemos fazer isso? Quais valores esse pixel que vai substituir os 3 originais deve ter? Existem diversas maneiras de se fazer isso, uma das formas é através da média.
 
 ```{r}
-
 ramostra_media<-aggregate(ramostra, fact=3, fun="mean")
 ramostra_media <- resample(ramostra, ramostra_media)
-
 ```
 
 Visualizar. Os valores calculados pela função não fazem sentido para uma classificação categórica.
@@ -163,15 +161,14 @@ ggplot(ramostra_media_df, aes(x=x, y=y)) +
 
 ```
 
-Outra opção é utilizar o valor mais comum da área, o que é particularmente adequado quando temos um mapa categórico, como por exemplo mata/não-mata, ou soja, floresta e pasto. Segue exemplo com o valor mais frequente (modal).
+Outra opção é utilizar o valor mais comum da área, o que é particularmente adequado quando temos um mapa categórico, como por exemplo mata/não-mata. Segue exemplo com o valor mais frequente (modal).
 ```{r}
 ramostra_modal<-terra::aggregate(ramostra, fact=3, fun="modal")
 ramostra_modal <- resample(ramostra, ramostra_modal, method="near")
 ```
 
-Visualizar
-```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Aggregação."}
-
+Visualizar. Os valores calculados pela função são consistentes com o original e fazem sentido. 
+```{r, dpi=300, fig.width =5, fig.height = 4, out.height=400, out.width=500, fig.cap="Aggregação pela mais frequente."}
 # Tidy
 ramostra_modal_df <- as.data.frame(ramostra_modal, xy = TRUE) 
 # Plot
@@ -184,7 +181,7 @@ ggplot(ramostra_modal_df, aes(x=x, y=y)) +
 
 ```
 
-Em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima. Aqui por exemplo, mudamos a proporção de cobertura florestal em nossa pequeno paisagem quando juntamos 3 pixels em um único. Ou seja, com cada passo mudamos a representção do mundo.
+Em cada nível de resolução, são observáveis processos e padrões que não podem necessariamente ser inferidos daqueles abaixo ou acima. Aqui por exemplo, mudamos a proporção de cobertura florestal em nossa pequeno paisagem quando juntamos 3 pixels em um único (proporção modou de 3/72 para 1/9). Ou seja, com cada passo mudamos a representção do mundo.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, dpi=300, fig.width =9, fig.height = 5, out.height=350, out.width=650, fig.cap="Mudanças causadas pela agregação."}
 bind_rows(as.polygons(ramostra, dissolve = FALSE) %>% 
@@ -208,3 +205,101 @@ sf_grids %>%
 
 ```
 
+## Escala Espacial e Desenho Amostral
+Dado o papel que a escala pode desempenhar em nossa compreensão dos padrões  e processos ecológicos, como escala ser considerada no desenho do estudo? Claramente, a resposta a esta pergunta irá variar
+dependendo dos fenômenos de interesse, mas ecologistas e estatísticos têm forneceu algumas orientações importantes. As questões-chave incluem o tamanho da unidade de amostragem (resoloção), o tipo de
+unidade de amostra e localizações da unidade de amostra, incluindo o espacamento entre as amostras (distância entre as amostras) e o tamanho da área de estudo.
+
+Com a disponibilidade de imagens de satélite é possível responder questões importantes relacionadas ao desenho do estudo antes de qualquer trabalho de campo. Uma tecnica de geoprocessamento (bordas - [Buffers](https://docs.qgis.org/3.16/pt_BR/docs/gentle_gis_introduction/vector_spatial_analysis_buffers.html)) é um dos mais frequentemente adotados para quantificar escala espacial na ecologia da paisagem.    O objetivo é criar buffers circulares de diferentes extensões ao redor dos sitios de amostragem (pontos, pixels, manchas, transetos lineares etc). 
+
+### 1.1) Obter e carregar dados (vectores)
+```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+meuSIG <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\vector\\rivers.gpkg"
+fs <- file.size(meuSIG)/(1024^2)
+```
+
+
+Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). 
+
+Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
+Lembrando-se de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
+
+Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "rivers.GPKG": 
+```{r echo=TRUE, eval=FALSE}
+meuSIG <- file.choose()
+```
+
+Agora vamos olhar o que tem no arquivo. Existem camadas diferentes com pontos e linhas:
+```{r }
+sf::st_layers(meuSIG)
+```
+
+O código abaixo vai carregar os dados e criar o objeto "rsm".
+Agora temos dados com: pontos cada 5 km ao longo os rios (rsm) e a 
+linha central de rios ("rsl").
+```{r }
+rsm <- sf::st_read(meuSIG, layer = "midpoints")
+rsl <- sf::st_read(meuSIG, layer = "centerline")
+```
+
+
+
+<P style="page-break-before: always">
+
+### 1.2) Mapa com linha central e pontos de rios em trechos de 5km
+
+```{r fig.width=7, fig.height=4}
+ggplot(rsl) +
+  geom_sf(aes(color=rio)) +
+  geom_sf(data = rsm, shape=21, aes(fill=zone))
+```
+
+### 1.3) Interativo (funcione somente com internet) 
+Mostrando agora com fundo de mapas "base" (OpenStreetMap/ESRI etc) 
+```{r fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
+
+mapview(rsl, zcol = "rio") 
+
+```
+
+<P style="page-break-before: always">
+
+### 1.4) Obter e carregar dados (raster)
+```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+meuSIGr <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\raster\\mapbiomas_AP_utm_rio\\utm_cover_AP_rio_2020.tif"
+fs2 <- file.size(meuSIGr)/(1024^2)
+```
+Mais uma vez vamos aproveitar os dados de MapBiomas. 
+Baixar arquivo raster com os dados (formato ".tif", tamanho `r round(fs2,1)` MB). 
+Link: [https://github.com/darrennorris/gisdata/blob/master/inst/raster/mapbiomas_AP_utm_rio/utm_cover_AP_rio_2020.tif](https://github.com/darrennorris/gisdata/blob/master/inst/raster/mapbiomas_AP_utm_rio/utm_cover_AP_rio_2020.tif) .
+Lembrando-se de salvar o arquivo ("utm_cover_AP_rio_2020.tif") em um local conhecido no seu computador. Para facilitar, os arquivos deve ficar no mesmo diretório do seu código (verifique com <code>getwd()</code>).
+
+Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova janela, e você deve buscar e selecionar o arquivo "utm_cover_AP_rio_2020.tif": 
+```{r echo=TRUE, eval=FALSE}
+meuSIGr <- file.choose()
+```
+
+O código abaixo vai carregar os dados e criar o objeto "mapbiomas_2020". Para isso trabalhamos com o pacote [terra](https://CRAN.R-project.org/package=terra). O pacote tem varios funçoes para a análise e modelagem de dados geográficos.
+
+```{r }
+mapbiomas_2020 <- rast(meuSIGr)
+
+```
+
+O arquivo tem uma classificação da terra no ano 2020 feito pela [MapBiomas](https://mapbiomas.org/). Tmap (https://r-tmap.github.io/tmap-book/index.html)
+
+```{r fig.width=7, fig.height=7}
+# Passo necessario para agilizar o processamento
+mapbiomas_2020_modal<-aggregate(mapbiomas_2020, fact=10, fun="modal")
+tm_shape(mapbiomas_2020_modal) +
+  tm_raster(title = "Classe", style = "cat", 
+            palette = "Set3") + 
+  tm_shape(rsl) + 
+  tm_lines(col="blue") + 
+  tm_shape(rsm) + 
+  tm_dots(size = 0.4, col = "yellow")
+
+```
+
+
+## Análise Multiescala da Cobertura Florestal
