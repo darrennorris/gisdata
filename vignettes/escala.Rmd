@@ -365,7 +365,7 @@ tm_layout(legend.position = c("right","top"),
 
 Para avaliar, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros (doubrando a extenção em cada passo). 
 
-```{r, echo=FALSE, fig.width=6, fig.height=5, dpi=300, out.height=250, out.width=300}
+```{r, echo=FALSE, fig.width=15, fig.height=5, dpi=300, out.height=250, out.width=750, fig.cap="Cobertura florestal em extensões diferentes ao redor de um local de amostragem."}
 rsm_31976 <- st_transform(rsm, 31976) 
 #250 m
 rsm_31976_b250 <- st_buffer(rsm_31976[1, ], dist = 250)
@@ -387,7 +387,26 @@ buffer.forest1.2000m <- mask(buffer.forest1.2000m, rsm_31976_b2000)
 rsm_31976_b4000 <- st_buffer(rsm_31976[1, ], dist = 4000)
 buffer.forest1.4000m <- crop(floresta_2020, rsm_31976_b4000)
 buffer.forest1.4000m <- mask(buffer.forest1.4000m, rsm_31976_b4000)
-
+#fig 250
+fig_250m <- tm_shape(buffer.forest1.250m) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b250) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+ # tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(title = "raio = 250 m", 
+          legend.position = c("right","top"),
+          legend.bg.color = "white")
+# fig 500 m
 fig_500m <- tm_shape(buffer.forest1.500m) +
   tm_raster(style = "cat", 
             palette = c("0" = "#E974ED", 
@@ -403,10 +422,10 @@ fig_500m <- tm_shape(buffer.forest1.500m) +
     title = "Classe") + 
  # tm_compass(position=c("left", "top")) +
 tm_scale_bar(position=c("left", "bottom")) +
-tm_layout(title = "raio = 500m", 
+tm_layout(title = "raio = 500 m", 
           legend.position = c("right","top"),
           legend.bg.color = "white")
-
+# fig 1000 m
 fig_1000m <- tm_shape(buffer.forest1.1km) +
   tm_raster(style = "cat", 
             palette = c("0" = "#E974ED", 
@@ -422,11 +441,49 @@ fig_1000m <- tm_shape(buffer.forest1.1km) +
     title = "Classe") + 
  # tm_compass(position=c("left", "top")) +
 tm_scale_bar(position=c("left", "bottom")) +
-tm_layout(title = "raio = 1000m", 
+tm_layout(title = "raio = 1000 m", 
 legend.position = c("right","top"),
           legend.bg.color = "white")
-
-tmap_arrange(fig_500m, fig_1000m)
+# fig 2000 m
+fig_2000m <- tm_shape(buffer.forest1.2000m) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b2000) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+ # tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(title = "raio = 2000 m", 
+legend.position = c("right","top"),
+          legend.bg.color = "white")
+#fig 4000 m 
+fig_4000m <- tm_shape(buffer.forest1.4000m) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b4000) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+ # tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(title = "raio = 4000 m", 
+legend.position = c("right","top"),
+          legend.bg.color = "white")
+#plot
+tmap_arrange(fig_250m, fig_500m, fig_1000m, fig_2000m, fig_4000m, nrow=1)
 ```
 
 ## Análise Multiescala da Cobertura Florestal
