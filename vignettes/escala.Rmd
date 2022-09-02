@@ -363,7 +363,7 @@ tm_layout(legend.position = c("right","top"),
           legend.bg.color = "white")
 ```
 
-Para avaliar, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros (doubrando a extenção em cada passo). 
+Para avaliar, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros, doubrando a escala (extensão) em cada passo). 
 
 ```{r, echo=FALSE, fig.width=15, fig.height=5, dpi=300, out.height=250, out.width=750, fig.cap="Cobertura florestal em extensões diferentes ao redor de um local de amostragem."}
 rsm_31976 <- st_transform(rsm, 31976) 
