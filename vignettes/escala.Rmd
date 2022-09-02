@@ -212,6 +212,8 @@ unidade de amostra e localizações da unidade de amostra, incluindo o espacamen
 
 Com a disponibilidade de imagens de satélite é possível responder questões importantes relacionadas ao desenho do estudo antes de qualquer trabalho de campo. Uma tecnica de geoprocessamento (bordas - [Buffers](https://docs.qgis.org/3.16/pt_BR/docs/gentle_gis_introduction/vector_spatial_analysis_buffers.html)) é um dos mais frequentemente adotados para quantificar escala espacial na ecologia da paisagem.    O objetivo é criar buffers circulares de diferentes extensões ao redor dos sitios de amostragem (pontos, pixels, manchas, transetos lineares etc). 
 
+Para entender a escala em que a cobertura de floresta muda em resposta à perturbação antropogênica ao redor dos rios. Para isso, quantificamos a quantidade de floresta que ocorre em várias distâncias em pontos ao longo dos rios a montante das hidrelétricas no Rio Araguari. Para ilustrar esta abordagem geral, usamos o banco de dados MapBiomas Coleção 6 de 2020, e vincule esses dados de cobertura da terra aos pontos de amostragem em rios.
+
 ### 1.1) Obter e carregar dados (vectores)
 ```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
 meuSIG <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\vector\\rivers.gpkg"
@@ -219,7 +221,7 @@ fs <- file.size(meuSIG)/(1024^2)
 ```
 
 
-Baixar arquivo com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). 
+Precisamos carregar os dados para rios e pontos. Baixar arquivo (vector) com os dados (formato "GPKG", tamanho `r round(fs,1)` MB). 
 
 Link: [https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG](https://github.com/darrennorris/gisdata/blob/master/inst/vector/rivers.GPKG) .
 Lembrando-se de salvar o arquivo ("rivers.GPKG")  em um local conhecido no seu computador.
@@ -235,7 +237,7 @@ sf::st_layers(meuSIG)
 ```
 
 O código abaixo vai carregar os dados e criar o objeto "rsm".
-Agora temos dados com: pontos cada 5 km ao longo os rios (rsm) e a 
+Agora temos dados com: pontos cada 5 km ao longo os rios ("rsm") e a 
 linha central de rios ("rsl").
 ```{r }
 rsm <- sf::st_read(meuSIG, layer = "midpoints")
@@ -279,14 +281,14 @@ Agora avisar R sobre onde ficar o arquivo. O código abaixo vai abrir uma nova j
 meuSIGr <- file.choose()
 ```
 
-O código abaixo vai carregar os dados e criar o objeto "mapbiomas_2020". Para isso trabalhamos com o pacote [terra](https://CRAN.R-project.org/package=terra). O pacote tem varios funçoes para a análise e modelagem de dados geográficos.
+O código abaixo vai carregar os dados e criar o objeto "mapbiomas_2020". Para isso trabalhamos com o pacote [terra](https://CRAN.R-project.org/package=terra). O pacote tem varios funçoes para a análise e modelagem de dados geográficos. Nós podemos ler os dados de cobertura da terra com a função <code>rast</code>.
 
 ```{r }
 mapbiomas_2020 <- rast(meuSIGr)
 
 ```
 
-O arquivo tem uma classificação da terra no ano 2020 feito pela [MapBiomas](https://mapbiomas.org/). Tmap (https://r-tmap.github.io/tmap-book/index.html)
+O arquivo tem uma classificação da terra no ano 2020 feito pela [MapBiomas](https://mapbiomas.org/). Tmap (https://r-tmap.github.io/tmap-book/index.html). Visualizar para verificar.
 
 ```{r fig.width=7, fig.height=7}
 # Passo necessario para agilizar o processamento
@@ -297,9 +299,134 @@ tm_shape(mapbiomas_2020_modal) +
   tm_shape(rsl) + 
   tm_lines(col="blue") + 
   tm_shape(rsm) + 
-  tm_dots(size = 0.4, col = "yellow")
+  tm_dots(size = 0.4, col = "yellow") + 
+   tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(legend.position = c("right","top"),
+          legend.bg.color = "white")
 
 ```
 
+Para simplificar nossa avaliação de escala, reclassificamos a camada mapbiomas_2020 em uma camada binária de floresta/não-floresta. Essa tarefa pode ser realizada pelo menos de duas maneiras.
+Aqui vamos reclassificar as categorias de cobertura da terra (agrupando diferentes áreas de cobertura florestal tipos) usando alguns comandos genéricos do R para criar uma nova camada com a cobertura de floresta
+ em toda a região de estudo. Para isso, criamos um mapa do mesmo grão e
+extensão, e então podemos redefinir os valores do mapa. Neste caso, queremos agrupar a cobertura da terra categorias 3 e 4 (Formação Florestal e Formação Savânica, respectivamente).
+
+```{r}
+# criar uma nova camada de floresta
+floresta_2020 <- mapbiomas_2020
+values(floresta_2020) <- 0
+# categorias florestais
+floresta_2020[mapbiomas_2020==3 | mapbiomas_2020==4] <- 1 
+```
+
+```{r fig.width=7, fig.height=7}
+# Passo necessario para agilizar o processamento
+floresta_2020_modal<-aggregate(floresta_2020, fact=10, fun="modal")
+tm_shape(floresta_2020_modal) +
+  tm_raster(title = "Classe", style = "cat", 
+            palette = c("#E974ED", "#129912")) + 
+  tm_shape(rsl) + 
+  tm_lines(col="blue") + 
+  tm_shape(rsm) + 
+  tm_dots(size = 0.4, col = "yellow") + 
+tm_layout("MapBiomas 2020",
+          legend.position = c("right","top"),
+          legend.bg.color = "white")
+
+```
+
+Em seguida, com as coordenadas dos pontos das localizações das amostras calculamos a quantidade de floresta que circunda cada local de amostragem em diferentes extensões.
+
+```{r}
+rsm_31976 <- st_transform(rsm, 31976) 
+rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
+buffer.forest1.1km <- crop(floresta_2020, rsm_31976_b1000)
+buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
+
+tm_shape(buffer.forest1.1km) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b1000) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+  tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(legend.position = c("right","top"),
+          legend.bg.color = "white")
+```
+
+Para avaliar, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros (doubrando a extenção em cada passo). 
+
+```{r, echo=FALSE, fig.width=6, fig.height=5, dpi=300, out.height=250, out.width=300}
+rsm_31976 <- st_transform(rsm, 31976) 
+#250 m
+rsm_31976_b250 <- st_buffer(rsm_31976[1, ], dist = 250)
+buffer.forest1.250m <- crop(floresta_2020, rsm_31976_b250)
+buffer.forest1.250m <- mask(buffer.forest1.250m, rsm_31976_b250)
+# 500 m
+rsm_31976_b500 <- st_buffer(rsm_31976[1, ], dist = 500)
+buffer.forest1.500m <- crop(floresta_2020, rsm_31976_b500)
+buffer.forest1.500m <- mask(buffer.forest1.500m, rsm_31976_b500)
+# 1000 m
+rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
+buffer.forest1.1km <- crop(floresta_2020, rsm_31976_b1000)
+buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
+# 2000 m
+rsm_31976_b2000 <- st_buffer(rsm_31976[1, ], dist = 2000)
+buffer.forest1.2000m <- crop(floresta_2020, rsm_31976_b2000)
+buffer.forest1.2000m <- mask(buffer.forest1.2000m, rsm_31976_b2000)
+# 4000 m
+rsm_31976_b4000 <- st_buffer(rsm_31976[1, ], dist = 4000)
+buffer.forest1.4000m <- crop(floresta_2020, rsm_31976_b4000)
+buffer.forest1.4000m <- mask(buffer.forest1.4000m, rsm_31976_b4000)
+
+fig_500m <- tm_shape(buffer.forest1.500m) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b500) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+ # tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(title = "raio = 500m", 
+          legend.position = c("right","top"),
+          legend.bg.color = "white")
+
+fig_1000m <- tm_shape(buffer.forest1.1km) +
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_shape(rsm_31976[1, ]) + 
+  tm_symbols(shape =21, col = "yellow", 
+            border.col = "black", border.lwd = 0.2, size=0.5) + 
+  tm_shape(rsm_31976_b1000) +
+  tm_borders(col = "black", lwd = 4, lty = "dashed") + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") + 
+ # tm_compass(position=c("left", "top")) +
+tm_scale_bar(position=c("left", "bottom")) +
+tm_layout(title = "raio = 1000m", 
+legend.position = c("right","top"),
+          legend.bg.color = "white")
+
+tmap_arrange(fig_500m, fig_1000m)
+```
 
 ## Análise Multiescala da Cobertura Florestal

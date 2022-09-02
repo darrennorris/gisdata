@@ -35,9 +35,12 @@ island <- data.frame(nome = "island",
 sf_island <- st_as_sf(island, 
                      coords = c("coord_x", "coord_y"),
                       crs = 4326)
+sf_island_250m <- st_buffer(sf_island, dist=250)
+
 sf_island_utm <- st_transform(sf_island, crs = 31976)
 sf_island_110m <- st_buffer(sf_island_utm, dist=110)
 e2 <- ext(vect(sf_island_110m)) 
+ext_ge <- raster::extent(as(sf_island_250m, "Spatial"))
 
 rsmall <- crop(r, e2, snap="out") 
 plot(rsmall)
@@ -92,3 +95,11 @@ ggplot() +
                       labels = classe_legenda) + 
   geom_text(data = rsmall_df, aes(x = x, y = y, 
                 label = mapbiomas_2020)) 
+
+install.packages("basemaps")
+library(basemaps)
+data(ext)
+basemap_magick(ext, map_service = "mapbox", map_type = "hybrid")
+library(dismo)
+g <- gmap(ext_ge, type = "satellite")
+plot(g)
