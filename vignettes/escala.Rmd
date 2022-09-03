@@ -381,6 +381,21 @@ tm_layout(legend.position = c("right","top"),
 #### 1.5) Comparação multiescala
 Em seguida, com as coordenadas dos pontos das localizações das amostras calculamos a quantidade de floresta que circunda cada local de amostragem em diferentes extensões.
 
+
+
+```{r fig.width=3, fig.height=4, fig.cap="Ilustração da determinação da quantidade de habitat ao redor de um ponto. Para um determinada extensão, o habitat de interesse é isolado. Um buffer (linha tracejada) é colocado ao redor de um ponto (amarela) e o número de células (pixels) que contém o habitat é somado e multiplicado pela área de cada célula."}
+rsm_31976 <- st_transform(rsm, 31976) 
+# Buffer
+rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
+# Recorte com buffer de 1000 metros
+buffer.forest1.1km <- crop(floresta_2020, rsm_31976_b1000)
+buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
+
+```
+
+### Pergunta 2
+Qual é a extensão em número de pixels desse recorte?
+
 ```{r fig.width=3, fig.height=4, fig.cap="Ilustração da determinação da quantidade de habitat ao redor de um ponto. Para um determinada extensão, o habitat de interesse é isolado. Um buffer (linha tracejada) é colocado ao redor de um ponto (amarela) e o número de células (pixels) que contém o habitat é somado e multiplicado pela área de cada célula."}
 rsm_31976 <- st_transform(rsm, 31976) 
 rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
@@ -534,5 +549,5 @@ tmap_arrange(fig_250m, fig_500m, fig_1000m, fig_2000m, fig_4000m, nrow=1)
 Aspectos quantitativos dos dados mudam fundamentalmente com a escala.
 Por exemplo, nesse caso, a proporção de floresta aumenta à medida que a extensão aumenta de 500 para 4000 metros. 
 
-### Pergunta 2
+### Pergunta 3
 A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o grão ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões e as características das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.
