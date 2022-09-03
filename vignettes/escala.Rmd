@@ -2,7 +2,10 @@
 title: "Escala"
 author: "Darren Norris"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
 vignette: >
   %\VignetteIndexEntry{Escala}
   %\VignetteEngine{knitr::rmarkdown}
@@ -17,11 +20,14 @@ knitr::opts_chunk$set(
 ```
 
 ## Apresentação
+
 Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial. Assim sendo, o conceito de <b>escala</b> não somente representar essas dimensões, mas também, ajudar nos apresentá-los de uma forma que facilite o entendimento sobre os processos e padrões sendo estudados.
 
 É muito importante ficar claro para você o que é escala (e o que não é!) e qual a importância desse conceito na elaboração do desenho experimental de um estudo, na coleta de dados, nas análises e na tomada de decisão. Esse tutorial te ajudará nisso!
 
-### Breve definação
+
+## Breve definação
+
 O termo escala refere-se à dimensão ou domínio espaço-temporal de um processo ou padrão. Na ecologia da paisagem, a escala é frequentemente descrita por sua componentes: resolução e extensão. 
 
 * Resolução:  menor unidade espacial de medida para um padrão ou processo.
@@ -29,7 +35,9 @@ O termo escala refere-se à dimensão ou domínio espaço-temporal de um process
 
 Resolução e extensão tendem a covariar – investigações com maior extensão tendem a ter resolução maiores também. Parte dessa covariância é prática: é difícil trabalhar em grandes extensões com dados coletados em tamanhos de resolução finos. No entanto, parte dessa covariância também é conceitual: muitas vezes em grandes extensões, podemos esperar que processos operando em resolução muito finos forneçam somente “ruído” e não dados/informações relevantes sobre os sistemas. Como  os desafios computacionais diminuíram e a disponibilidade de dados de alta resolução aumentou, a covariância entre resolução e extensão nas investigações diminuiu.
 
-### Primeiro passos com uma raster
+
+## Primeiros passos com uma raster
+
 Uma raster é um matriz de valores com coordenados geográficos. Cada pixel de uma raster representa uma região geográfica, e o valor do pixel representa uma característica dessa região ([Dados raster](https://docs.qgis.org/2.8/pt_BR/docs/gentle_gis_introduction/raster_data.html)).
 
 Em geral é necessário baixar alguns pacotes para que possamos fazer
@@ -41,7 +49,6 @@ library(terra)
 library(sf)
 library(mapview)
 library(tmap)
-
 ```
 
 
@@ -132,6 +139,8 @@ ggplot(ramostra_df, aes(x=x, y=y)) +
 
 ```
 
+
+
 ## Alterando a resolução
  
 Alterando a resolução serve como exemplo mostrando como os passos/etapas/cálculos mude dependendo o tipo de 
@@ -205,7 +214,12 @@ sf_grids %>%
 
 ```
 
-## Escala Espacial e Desenho Amostral
+### Pergunta 1 
+Confira os resultados e explique o que aconteceu.Como e porque moudou os valores em cada caso (média e modal)?
+
+
+
+## Escala espacial e desenho amostral
 Dado o papel que a escala pode desempenhar em nossa compreensão dos padrões  e processos ecológicos, como escala ser considerada no desenho do estudo? Claramente, a resposta a esta pergunta irá variar
 dependendo dos fenômenos de interesse, mas ecologistas e estatísticos têm forneceu algumas orientações importantes. As questões-chave incluem o tamanho da unidade de amostragem (resoloção), o tipo de
 unidade de amostra e localizações da unidade de amostra, incluindo o espacamento entre as amostras (distância entre as amostras) e o tamanho da área de estudo.
@@ -214,7 +228,9 @@ Com a disponibilidade de imagens de satélite é possível responder questões i
 
 Para entender a escala em que a cobertura de floresta muda em resposta à perturbação antropogênica ao redor dos rios. Para isso, quantificamos a quantidade de floresta que ocorre em várias distâncias em pontos ao longo dos rios a montante das hidrelétricas no Rio Araguari. Para ilustrar esta abordagem geral, usamos o banco de dados MapBiomas Coleção 6 de 2020, e vincule esses dados de cobertura da terra aos pontos de amostragem em rios.
 
-### 1.1) Obter e carregar dados (vectores)
+
+#### 1.1) Obter e carregar dados (vectores)
+
 ```{r, echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
 meuSIG <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\vector\\rivers.gpkg"
 fs <- file.size(meuSIG)/(1024^2)
@@ -248,17 +264,20 @@ rsl <- sf::st_read(meuSIG, layer = "centerline")
 
 <P style="page-break-before: always">
 
-### 1.2) Mapa com linha central e pontos de rios em trechos de 5km
 
-```{r fig.width=7, fig.height=4}
+#### 1.2) Visualizar os arquivos (camadas vector)
+Visualizar para verificar.
+Mapa com linha central e pontos de rios em trechos de 5km.
+
+```{r fig.width=6, fig.height=4}
 ggplot(rsl) +
   geom_sf(aes(color=rio)) +
   geom_sf(data = rsm, shape=21, aes(fill=zone))
 ```
 
-### 1.3) Interativo (funcione somente com internet) 
+Mapa interativo (funcione somente com internet) 
 Mostrando agora com fundo de mapas "base" (OpenStreetMap/ESRI etc) 
-```{r fig.width=5, fig.height=5, echo=FALSE, message=FALSE, warning=FALSE}
+```{r fig.width=4, fig.height=4, echo=TRUE, message=FALSE, warning=FALSE}
 
 mapview(rsl, zcol = "rio") 
 
@@ -266,7 +285,8 @@ mapview(rsl, zcol = "rio")
 
 <P style="page-break-before: always">
 
-### 1.4) Obter e carregar dados (raster)
+
+#### 1.3) Obter e carregar dados (raster)
 ```{r echo=FALSE, eval=TRUE, message=FALSE, warning=FALSE}
 meuSIGr <- "C:\\Users\\user\\Documents\\Articles\\gis_layers\\gisdata\\inst\\raster\\mapbiomas_AP_utm_rio\\utm_cover_AP_rio_2020.tif"
 fs2 <- file.size(meuSIGr)/(1024^2)
@@ -288,25 +308,33 @@ mapbiomas_2020 <- rast(meuSIGr)
 
 ```
 
-O arquivo tem uma classificação da terra no ano 2020 feito pela [MapBiomas](https://mapbiomas.org/). Tmap (https://r-tmap.github.io/tmap-book/index.html). Visualizar para verificar.
+O arquivo tem uma classificação da terra no ano 2020 feito pela [MapBiomas](https://mapbiomas.org/). Tmap (https://r-tmap.github.io/tmap-book/index.html). 
 
-```{r fig.width=7, fig.height=7}
+
+
+#### 1.4) Visualizar os arquivos (camadas raster e vector)
+Visualizar para verificar.
+
+```{r fig.width=6, fig.height=6, fig.cap="Cobertura da terra ao redor do Rio Araguari em 2020. Mostrando os pontos de amostragem (pontos amarelas) cada 5 quilômetros ao longo do rio."}
 # Passo necessario para agilizar o processamento
 mapbiomas_2020_modal<-aggregate(mapbiomas_2020, fact=10, fun="modal")
+# Plot
 tm_shape(mapbiomas_2020_modal) +
   tm_raster(title = "Classe", style = "cat", 
             palette = "Set3") + 
-  tm_shape(rsl) + 
+tm_shape(rsl) + 
   tm_lines(col="blue") + 
-  tm_shape(rsm) + 
+tm_shape(rsm) + 
   tm_dots(size = 0.4, col = "yellow") + 
-   tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_compass(position=c("left", "top")) +
+tm_scale_bar(breaks = c(0, 25, 50), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(legend.position = c("right","top"),
           legend.bg.color = "white")
 
 ```
 
+#### 1.4) Reclassificação
 Para simplificar nossa avaliação de escala, reclassificamos a camada mapbiomas_2020 em uma camada binária de floresta/não-floresta. Essa tarefa pode ser realizada pelo menos de duas maneiras.
 Aqui vamos reclassificar as categorias de cobertura da terra (agrupando diferentes áreas de cobertura florestal tipos) usando alguns comandos genéricos do R para criar uma nova camada com a cobertura de floresta
  em toda a região de estudo. Para isso, criamos um mapa do mesmo grão e
@@ -320,50 +348,68 @@ values(floresta_2020) <- 0
 floresta_2020[mapbiomas_2020==3 | mapbiomas_2020==4] <- 1 
 ```
 
-```{r fig.width=7, fig.height=7}
+
+Vizualizar para verificar.
+
+
+```{r, fig.width=6, fig.height=6, fig.cap="Floresta ao redor do Rio Araguari. MapBiomas 2020 reclassificado em floresta e não-floresta. Mostrando os pontos de amostragem (pontos amarelas) cada 5 quilômetros ao longo do rio."}
+
 # Passo necessario para agilizar o processamento
 floresta_2020_modal<-aggregate(floresta_2020, fact=10, fun="modal")
+# Plot
 tm_shape(floresta_2020_modal) +
-  tm_raster(title = "Classe", style = "cat", 
-            palette = c("#E974ED", "#129912")) + 
-  tm_shape(rsl) + 
+  tm_raster(style = "cat", 
+            palette = c("0" = "#E974ED", 
+                        "1" ="#129912"), legend.show = FALSE) + 
+  tm_add_legend(type = "fill", 
+    labels = c("não-floresta", "floresta"),
+    col = c("#E974ED", "#129912"),
+    title = "Classe") +
+tm_shape(rsl) + 
   tm_lines(col="blue") + 
-  tm_shape(rsm) + 
+tm_shape(rsm) + 
   tm_dots(size = 0.4, col = "yellow") + 
-tm_layout("MapBiomas 2020",
-          legend.position = c("right","top"),
+tm_scale_bar(breaks = c(0, 25, 50), text.size = 1, 
+             text.color = "white", position=c("left", "bottom")) +
+tm_layout(legend.position = c("right","top"),
           legend.bg.color = "white")
 
 ```
 
+
+
+#### 1.5) Comparação multiescala
 Em seguida, com as coordenadas dos pontos das localizações das amostras calculamos a quantidade de floresta que circunda cada local de amostragem em diferentes extensões.
 
-```{r}
+```{r fig.width=3, fig.height=4, fig.cap="Ilustração da determinação da quantidade de habitat ao redor de um ponto. Para um determinada extensão, o habitat de interesse é isolado. Um buffer (linha tracejada) é colocado ao redor de um ponto (amarela) e o número de células (pixels) que contém o habitat é somado e multiplicado pela área de cada célula."}
 rsm_31976 <- st_transform(rsm, 31976) 
 rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
 buffer.forest1.1km <- crop(floresta_2020, rsm_31976_b1000)
 buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
-
+# Plot
 tm_shape(buffer.forest1.1km) +
   tm_raster(style = "cat", 
             palette = c("0" = "#E974ED", 
                         "1" ="#129912"), legend.show = FALSE) + 
-  tm_shape(rsm_31976[1, ]) + 
+tm_shape(rsm_31976[1, ]) + 
   tm_symbols(shape =21, col = "yellow", 
             border.col = "black", border.lwd = 0.2, size=0.5) + 
-  tm_shape(rsm_31976_b1000) +
+tm_shape(rsm_31976_b1000) +
   tm_borders(col = "black", lwd = 4, lty = "dashed") + 
-  tm_add_legend(type = "fill", 
+tm_add_legend(type = "fill", 
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
-  tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_compass(position=c("left", "top")) +
+tm_scale_bar(breaks = c(0, 0.5, 1), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(legend.position = c("right","top"),
           legend.bg.color = "white")
 ```
 
-Para avaliar, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros, doubrando a escala (extensão) em cada passo). 
+
+
+Para uma comparação multiescala, vamos repetir o mesmo processo, mas com distancias de 250, 500, 1000, 2000 e 4000 metros, doubrando a escala (extensão) em cada passo. 
 
 ```{r, echo=FALSE, fig.width=15, fig.height=5, dpi=300, out.height=250, out.width=750, fig.cap="Cobertura florestal em extensões diferentes ao redor de um local de amostragem."}
 rsm_31976 <- st_transform(rsm, 31976) 
@@ -401,8 +447,7 @@ fig_250m <- tm_shape(buffer.forest1.250m) +
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
- # tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_scale_bar(breaks = c(0, 0.125, 0.25), text.size = 1, position=c("left", "bottom")) +
 tm_layout(title = "raio = 250 m", 
           legend.position = c("right","top"),
           legend.bg.color = "white")
@@ -420,8 +465,8 @@ fig_500m <- tm_shape(buffer.forest1.500m) +
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
- # tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_scale_bar(breaks = c(0, 0.25, 0.5), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(title = "raio = 500 m", 
           legend.position = c("right","top"),
           legend.bg.color = "white")
@@ -439,8 +484,8 @@ fig_1000m <- tm_shape(buffer.forest1.1km) +
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
- # tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_scale_bar(breaks = c(0, 0.5, 1), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(title = "raio = 1000 m", 
 legend.position = c("right","top"),
           legend.bg.color = "white")
@@ -458,8 +503,8 @@ fig_2000m <- tm_shape(buffer.forest1.2000m) +
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
- # tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_scale_bar(breaks = c(0, 1, 2), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(title = "raio = 2000 m", 
 legend.position = c("right","top"),
           legend.bg.color = "white")
@@ -477,8 +522,8 @@ fig_4000m <- tm_shape(buffer.forest1.4000m) +
     labels = c("não-floresta", "floresta"),
     col = c("#E974ED", "#129912"),
     title = "Classe") + 
- # tm_compass(position=c("left", "top")) +
-tm_scale_bar(position=c("left", "bottom")) +
+tm_scale_bar(breaks = c(0, 2, 4), text.size = 1, 
+             position=c("left", "bottom")) +
 tm_layout(title = "raio = 4000 m", 
 legend.position = c("right","top"),
           legend.bg.color = "white")
@@ -486,4 +531,8 @@ legend.position = c("right","top"),
 tmap_arrange(fig_250m, fig_500m, fig_1000m, fig_2000m, fig_4000m, nrow=1)
 ```
 
-## Análise Multiescala da Cobertura Florestal
+Aspectos quantitativos dos dados mudam fundamentalmente com a escala.
+Por exemplo, nesse caso, a proporção de floresta aumenta à medida que a extensão aumenta de 500 para 4000 metros. 
+
+### Pergunta 2
+A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o grão ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões e as características das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.
