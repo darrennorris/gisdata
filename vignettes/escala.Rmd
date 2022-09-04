@@ -27,10 +27,12 @@ Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial
 
 Nesse tutorial usaremos conteudo baseado no Capítulo 2 do livro [Fletcher & Fortin. 2019. Spatial Ecology and Conservation Modeling: Applications with R](https://link.springer.com/book/10.1007/978-3-030-01989-1)  e ["Tutorial Escala"](https://www.needs.ufscar.br/tutorial_escala.pdf) do Dr. Alexandre Martensen.
 
+Vamos:
+1) carregar dados (raster e vectorial); 2) olhar mapas (SIG); 3) rodar algumas tarefas de geoprocessamento; 4) entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta em escalas diferentes.
 
-## Breve definação
+## Escala: breve definação
 
-O termo escala refere-se à dimensão ou domínio espaço-temporal de um processo ou padrão. Na ecologia da paisagem, a escala é frequentemente descrita por sua componentes: resolução e extensão. 
+Na ecologia o termo escala refere-se à dimensão ou domínio espaço-temporal de um processo ou padrão. Na ecologia da paisagem, a escala é frequentemente descrita por sua componentes: resolução e extensão. 
 
 * **Resolução**:  menor unidade espacial de medida para um padrão ou processo.
 * **Extensão**: descreve o comprimento ou tamanho de área sob investigação.
@@ -40,10 +42,7 @@ Resolução e extensão tendem a covariar – investigações com maior extensã
 ## Codigo e R
  * Objetivo não é de apresentar detalhes sobre os cálculos/métodos estatísticas ou os funções no [R](https://cran.r-project.org/). Existem diversos exemplos disponíveis [“Ciência de Dados com R–Introdução......”: ](https://cdr.ibpad.com.br/cdr-intro.pdf) e com google "r cran grupo de ajudar tutorial".......
 
- * Mas, sim, o objetivo é  de apresentar um tutorial mostrado os capacidades e opções para desenvolver e integrar pesquisas na ecologia da paisagem no ambiente estatística de [R](https://cran.r-project.org/)
-
-Vamos:
-1) carregar dados (raster e vectorial); 2) olhar mapas (SIG); 3) rodar alguns tarefas de geoprocessamento; 4) calcular a proporção de floresta em escalas diferentes.
+ * O objetivo é  de apresentar um tutorial mostrado os capacidades e opções para desenvolver e integrar pesquisas na ecologia da paisagem no ambiente estatística de [R](https://cran.r-project.org/)
 
 Obviamente, todas as tarefas de geoprocessamento podem ser desenvolvidas anteriormente em um SIG ([QGIS](https://docs.qgis.org/3.22/pt_BR/docs/training_manual/)). Então porque use R? R tem a capacidade (baseada em codigo) para alternar  entre tarefas de processamento, modelagem e visualização de dados geográficos e não geográficos. Alem disso, como é possível importar, modificar, analisar e visualizar dados espaciais no mesmo ambiente com script/codigo, o R permite fluxos de trabalho transparentes e reproduzíveis ([A Ciência Aberta](https://foster.gitbook.io/manual-de-formacao-em-ciencia-aberta/02introducaoacienciaaberta/01conceito_e_principios_da_ciencia_aberta)).
 
@@ -52,7 +51,7 @@ Obviamente, todas as tarefas de geoprocessamento podem ser desenvolvidas anterio
 Uma raster é um matriz de valores com coordenados geográficos. Cada pixel de uma raster representa uma região geográfica, e o valor do pixel representa uma característica dessa região (mais sobre [dados raster](https://docs.qgis.org/3.22/pt_BR/docs/gentle_gis_introduction/raster_data.html)).
 
 Em geral é necessário baixar alguns pacotes para que possamos fazer
-as nossas análises. Pprecisamos os seguintes pacotes, que deve esta instalado antes: 
+as nossas análises. Precisamos os seguintes pacotes, que deve esta instalado antes: 
 
  * [tidyverse](https://www.tidyverse.org/), 
  * [terra](https://rspatial.org/terra/pkg/index.html),
@@ -112,24 +111,27 @@ Agora podemos verificar informcões sobre o raster (metadados).
 ramostra
 ```
 
-Isso nos mostra informações sobre escala espacial (resolução e extensão) e a sistema de coordenados (SIRGAS 2000 / UTM zone 22N (EPSG:31976)).
+Isso nos mostra informações sobre escala espacial (resolução e extensão) e a sistema de coordenados (SIRGAS 2000 / UTM zone 22N (EPSG:31976)). Além disso é possível obter informações específicas através de funções específicas..
 
 ```{r, eval= FALSE, echo = TRUE}
 # Obter informações sobre escala espacial
 # resolução
-res(rasmostra)
+res(ramostra)
 # numero de colunas
-ncol(rasmostra)
+ncol(ramostra)
 # numero de linhas
-nrow(rasmostra)
+nrow(ramostra)
 
 ```
 
 
 ### Pergunta 1
-`r kableExtra::text_spec("Com base nos resultados obtidos até agora, qual o tamanho do pixel em metros quadrados? Qual o tamnaho total da raster em hectares e quilometros quadrados?", color = "blue")`
-------------------
 
+
+`r kableExtra::text_spec("Com base nos resultados obtidos até agora, qual o tamanho do pixel em metros quadrados? Qual o tamnaho total da raster em hectares e quilometros quadrados?", color = "blue", bold = TRUE)`
+
+
+----------------------
 
 Podemos também plotar para verificar.
 ```{r, fig.width =4, fig.height = 2.5}
@@ -256,10 +258,14 @@ sf_grids %>%
 
 ```
 
-### Pergunta 2 
-Confira os resultados e explique o que aconteceu.Como e porque moudou os valores em cada caso (média e modal)?
+
+### Pergunta 2
 
 
+`r kableExtra::text_spec("Confira os resultados e explique o que aconteceu. Como e porque moudou os valores em cada caso (média e modal)?", color = "blue", bold = TRUE)`
+
+
+------------------
 
 ## Escala espacial e desenho amostral
 Dado o papel que a escala pode desempenhar em nossa compreensão dos padrões  e processos ecológicos, como escala deve ser considerada no desenho do estudo? Claramente, a resposta a esta pergunta irá variar
@@ -445,7 +451,12 @@ buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
 ```
 
 ### Pergunta 3
-Qual é a extensão em número de pixels desse recorte?
+
+
+`r kableExtra::text_spec("Qual é a extensão em número de pixels desse recorte?", color = "blue", bold = TRUE)`
+
+
+---------------------
 
 Vizualizar para verificar.
 ```{r fig.width=3, fig.height=4, fig.cap="Ilustração da determinação da quantidade de habitat ao redor de um ponto. Para um determinada extensão, o habitat de interesse é isolado. Um buffer (linha tracejada) é colocado ao redor de um ponto (amarela) e o número de células (pixels) que contém o habitat é somado e multiplicado pela área de cada célula."}
@@ -598,4 +609,9 @@ Aspectos quantitativos dos dados mudam fundamentalmente com a escala.
 Por exemplo, nesse caso, a proporção de floresta aumenta à medida que a extensão aumenta de 500 para 4000 metros. 
 
 ### Pergunta 4
-A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o grão ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões e as características das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.
+
+
+`r kableExtra::text_spec("A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o resolução ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões (indicados no exemplo anterior) e as características das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.", color = "blue", bold = TRUE)`
+
+
+----------------------
