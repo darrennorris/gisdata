@@ -27,8 +27,12 @@ Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial
 
 Nesse tutorial usaremos conteudo baseado no Capítulo 2 do livro [Fletcher & Fortin. 2019. Spatial Ecology and Conservation Modeling: Applications with R](https://link.springer.com/book/10.1007/978-3-030-01989-1)  e ["Tutorial Escala"](https://www.needs.ufscar.br/tutorial_escala.pdf) do Dr. Alexandre Martensen.
 
-Vamos:
-1) carregar dados (raster e vectorial); 2) olhar mapas (SIG); 3) rodar algumas tarefas de geoprocessamento; 4) entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta em escalas diferentes.
+Nesta aula vamos entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta em escalas diferentes.
+1. Carregar dados geoespaciais (raster e vetorial); 
+2. Produzir mapas; 
+3. Alterar escala (resolução e extensão espacial); 
+4. Calcular a área de uma classe de habitat; 
+5. Desenvolve uma comparação multiescala.
 
 ## Escala: breve definação
 
@@ -37,7 +41,7 @@ Na ecologia o termo escala refere-se à dimensão ou domínio espaço-temporal d
 * **Resolução**:  menor unidade espacial de medida para um padrão ou processo.
 * **Extensão**: descreve o comprimento ou tamanho de área sob investigação.
 
-Resolução e extensão tendem a covariar – investigações com maior extensão tendem a ter resolução maiores também. Parte dessa covariância é prática: é difícil trabalhar em grandes extensões com dados coletados em tamanhos de resolução finos. No entanto, parte dessa covariância também é conceitual: muitas vezes em grandes extensões, podemos esperar que processos operando em resolução muito finos forneçam somente “ruído” e não dados/informações relevantes sobre os sistemas. Como  os desafios computacionais diminuíram e a disponibilidade de dados de alta resolução aumentou, a covariância entre resolução e extensão nas investigações diminuiu.
+Resolução e extensão tendem a covariar – estudos com maior extensão tendem a ter resolução maiores também. Parte dessa covariância é prática: é difícil trabalhar em grandes extensões com dados coletados em tamanhos de resolução finos. No entanto, parte dessa covariância também é conceitual: muitas vezes em grandes extensões, podemos esperar que processos operando em resolução muito finos forneçam somente “ruído” e não dados/informações relevantes sobre os sistemas. Como  os desafios computacionais diminuíram e a disponibilidade de dados de alta resolução aumentou, a covariância entre resolução e extensão nas investigações diminuiu.
 
 ## Codigo e R
  * Objetivo não é de apresentar detalhes sobre os cálculos/métodos estatísticas ou os funções no [R](https://cran.r-project.org/). Existem diversos exemplos disponíveis [“Ciência de Dados com R–Introdução......”: ](https://cdr.ibpad.com.br/cdr-intro.pdf) e com google "r cran grupo de ajudar tutorial".......
