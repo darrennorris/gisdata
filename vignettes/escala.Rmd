@@ -20,21 +20,20 @@ knitr::opts_chunk$set(
 ```
 
 ## Apresentação
-
-Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial. Assim sendo, o conceito de <b>escala</b> não somente representar essas dimensões, mas também, ajudar nos apresentá-los de uma forma que facilite o entendimento sobre os processos e padrões sendo estudados.
-
-É muito importante ficar claro para você o que é escala (e o que não é!) e qual a importância desse conceito na elaboração do desenho experimental de um estudo, na coleta de dados, nas análises e na tomada de decisão. Esse tutorial te ajudará nisso!
-
-Nesse tutorial usaremos conteudo baseado no Capítulo 2 do livro [Fletcher & Fortin. 2019. Spatial Ecology and Conservation Modeling: Applications with R](https://link.springer.com/book/10.1007/978-3-030-01989-1)  e ["Tutorial Escala"](https://www.needs.ufscar.br/tutorial_escala.pdf) do Dr. Alexandre Martensen.
-
 Nesta aula vamos entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta em escalas diferentes.
+Durante a aula você aprenderá a
 1. Carregar dados geoespaciais (raster e vetorial); 
 2. Produzir mapas; 
 3. Alterar escala (resolução e extensão espacial); 
 4. Calcular a área de uma classe de habitat; 
 5. Desenvolve uma comparação multiescala.
 
+É muito importante ficar claro para você o que é escala (e o que não é!) e qual a importância desse conceito na elaboração do desenho amostral de um estudo, na coleta de dados, nas análises e na tomada de decisão. Nesse tutorial usaremos conteudo baseado no Capítulo 2 do livro [Fletcher & Fortin. 2019. Spatial Ecology and Conservation Modeling: Applications with R](https://link.springer.com/book/10.1007/978-3-030-01989-1)  e ["Tutorial Escala"](https://www.needs.ufscar.br/tutorial_escala.pdf) do Dr. Alexandre Martensen.
+
 ## Escala: breve definação
+
+Todos os processos e padrões ecológicos têm uma dimensão temporal e espacial. Assim sendo, o conceito de <b>escala</b> não somente representar essas dimensões, mas também, ajudar nos apresentá-los de uma forma que facilite o entendimento sobre os processos e padrões sendo estudados. 
+
 
 Na ecologia o termo escala refere-se à dimensão ou domínio espaço-temporal de um processo ou padrão. Na ecologia da paisagem, a escala é frequentemente descrita por sua componentes: resolução e extensão. 
 
