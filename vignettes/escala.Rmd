@@ -307,7 +307,7 @@ Agora vamos olhar o que tem no arquivo. Existem camadas diferentes com pontos, l
 sf::st_layers(meuSIG)
 ```
 
-Nós só precisamos de duas dessas camadas. O código abaixo vai carregar os dados que precisamos e criar os objetos "rsm" e "rsl.
+Nós só precisamos de duas dessas camadas. O código abaixo vai carregar os dados que precisamos e criar os objetos "rsm" e "rsl".
 Agora temos dados com: pontos cada 5 km ao longo os rios ("rsm") e a 
 linha central de rios ("rsl").
 ```{r }
@@ -657,7 +657,7 @@ Por exemplo, nesse caso, parece que a proporção de floresta aumenta à medida 
 
 ### Pergunta 4
 
-`r kableExtra::text_spec("Usando os valores conhecidos de raio e área de floresta para os diferentes buffers circulares, calcule a proporção de floresta em cada uma das diferentes extensões de buffer. Apresente os resultados incluindo cálculos e um gráfico com valores de "extensão" no eixo x e proporção da floresta no eixo y. Em menos de 200 palavras apresente sua interpretação do gráfico", color = "blue", bold = TRUE)`
+`r kableExtra::text_spec("Usando os valores conhecidos de raio e área de floresta para os diferentes buffers circulares, calcule a proporção de floresta em cada uma das diferentes extensões de buffer. Apresente 1) os resultados incluindo cálculos. 2) um gráfico com valores de extensão no eixo x e proporção da floresta no eixo y. 3) Em menos de 200 palavras apresente sua interpretação do gráfico.", color = "blue", bold = TRUE)`
 
 
 ----------------------
@@ -665,7 +665,7 @@ Por exemplo, nesse caso, parece que a proporção de floresta aumenta à medida 
 ### Pergunta 5
 
 
-`r kableExtra::text_spec("A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o resolução ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões (indicados no exemplo anterior) e as características das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.", color = "blue", bold = TRUE)`
+`r kableExtra::text_spec("A modelagem multiescala quantifica as condições do ambiente em múltiplas escalas alterando o resolução ou a extensão da análise e, em seguida, avaliando qual das escalas consideradas  explica melhor um padrão ou processo. Escolha 1 espécie aquático e 1 espécie terrestre que ocorram na região. Com base nas diferenças entre extensões (indicados no exemplo anterior) e as características funcionais das espécies (por exemplo área de vida), escolher as extensões mais adequadas para um estudo multiescala de cada espécie.", color = "blue", bold = TRUE)`
 
 
 ----------------------
