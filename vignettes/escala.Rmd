@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ```
 
 ## Apresentação
-Nesta aula vamos entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta em escalas diferentes.
+Nesta aula (https://rpubs.com/darren75/escala) vamos entender a importância de escala na ecologia da paisagem através cálculos com a proporção de floresta.
 Durante a aula você aprenderá a
 
 1.  Alterar escala (resolução e extensão espacial),  
