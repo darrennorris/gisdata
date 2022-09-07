@@ -2,12 +2,9 @@
 title: "Escala"
 author: "Darren Norris"
 date: "`r Sys.Date()`"
-output: 
-  rmarkdown::html_vignette:
-    toc: true
-    toc_depth: 3
+output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Escala}
+  %\VignetteIndexEntry{Intro_pt}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -446,9 +443,9 @@ rsm_31976 <- st_transform(rsm, 31976)
 rsm_31976_b1000 <- st_buffer(rsm_31976[1, ], dist = 1000)
 
 # Recorte com buffer de 1000 metros (mudando a extensão).
-buffer.forest1.1km <- crop(floresta_2020, rsm_31976_b1000)
+buffer.forest1.1km <- crop(floresta_2020, snap="out", rsm_31976_b1000)
 # Máscara para que os pixels fora do polígono sejam nulos.
-buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000)
+buffer.forest1.1km <- mask(buffer.forest1.1km, rsm_31976_b1000, touches=TRUE)
 names(buffer.forest1.1km) <- "forest_2020_1km"
 
 ```
